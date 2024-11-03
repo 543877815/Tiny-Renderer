@@ -1,0 +1,9 @@
+[
+  {
+    "object": "map",
+    "vertex_shader": "./shader/map_vs.glsl",
+    "fragment_shader": "./shader/map_fs.glsl",
+    "uniform": [ "projection", "view", "model" ],
+    "projection": "orthogonal"
+  }
+]

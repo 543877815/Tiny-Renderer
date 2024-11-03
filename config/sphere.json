@@ -1,0 +1,15 @@
+[
+  {
+    "object": "axis",
+    "vertex_shader": "./shader/axis_vs.glsl",
+    "fragment_shader": "./shader/axis_fs.glsl",
+    "uniform": [ "projection", "view", "model" ]
+
+  },
+  {
+    "object": "sphere",
+    "vertex_shader": "./shader/sphere_vs.glsl",
+    "fragment_shader": "./shader/sphere_fs.glsl",
+    "uniform": [ "projection", "view", "model" ]
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "object": "rectangle2d",
+    "vertex_shader": "./shader/axis_vs.glsl",
+    "fragment_shader": "./shader/axis_fs.glsl",
+    "uniform": [ "projection", "view", "model" ]
+  }
+]
