@@ -11,6 +11,8 @@
 #include <mutex>
 #include <memory>
 
+#include "../draw/camera.h"
+
 class ImGuiManager {
 public:
 	ImGuiManager(const ImGuiManager&) = delete;
@@ -18,6 +20,7 @@ public:
 	static std::shared_ptr<ImGuiManager> GetInstance(GLFWwindow* window = nullptr);
 	float* GetClearColor() { return m_clear_color; }
 	void Render(std::vector <std::function<void()>>& func);
+	void Controller();
 	explicit ImGuiManager(GLFWwindow* window);
 	~ImGuiManager();
 

@@ -1,5 +1,4 @@
 #pragma once
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
@@ -33,14 +32,24 @@ public:
 
 	void SetViewMatrix(glm::mat4 mat) { m_viewMatrix = mat; }
 	glm::mat4& GetViewMatrix() { return m_viewMatrix; }
-	glm::mat4& GetOrthogonal() { return m_orthogonalProjectionMatrix; }
-	glm::mat4& GetPerspective() { return m_prospectiveProjectionMatrix; }
+	glm::mat4& GetOrthogonalProjectionMatrix() { return m_orthogonalProjectionMatrix; }
+	glm::mat4& GetPerspectiveProjectionMatrix() { return m_prospectiveProjectionMatrix; }
 	void SetPosition(glm::vec3 position) { m_position = position; }
 	glm::vec3& GetPosition() { return m_position; }
+	float& GetFov() { return m_fov; }
+	float& GetNear() { return m_near; }
+	float& GetFar() { return m_far; }
+	float& GetLeft() { return m_left; }
+	float& GetRight() { return m_right; }
+	float& GetTop() { return m_top; }
+	float& GetBottom() { return m_bottom; }
+	void UpdateViewMatrix();
+	void UpdateOrthogonalProjectionMatrix();
+	void UpdatePerspectiveProjectionMatrix();
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 	// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
+	void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 	// processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(float yoffset);
 
@@ -61,7 +70,7 @@ private:
 	float m_movementSpeed = 2.5f;
 	float m_mouseSensitivity = 0.1f;;
 	// projection relative
-	float m_zoom = 45.0f;
+	float m_fov = 45.0f;
 	float m_near = 0.1f;
 	float m_far = 100.0f;
 	float m_left = -1.2f;

@@ -68,10 +68,10 @@ public:
 
 		if (config.uniform.count("projection")) {
 			if (config.projection == "orthogonal") {
-				uniform.emplace("projection", m_camera->GetOrthogonal());
+				uniform.emplace("projection", m_camera->GetOrthogonalProjectionMatrix());
 			}
 			else {
-				uniform.emplace("projection", m_camera->GetPerspective());
+				uniform.emplace("projection", m_camera->GetPerspectiveProjectionMatrix());
 			}
 		}
 		if (config.uniform.count("view")) {
@@ -92,7 +92,6 @@ public:
 		processViewCamera(m_window, SCR_WIDTH, SCR_HEIGHT);
 		processModelMatrix(m_window, model);
 		std::vector<std::function<void()>> functions;
-
 
 		for (size_t i = 0; i < m_render_objs.size(); i++) {
 			auto& render_obj = m_render_objs[i];

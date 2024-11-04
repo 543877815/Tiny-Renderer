@@ -20,14 +20,14 @@ void Camera::updateCameraVectors() {
 
 void Camera::ProcessMouseScroll(float yoffset)
 {
-	m_zoom -= (float)yoffset;
-	if (m_zoom < 1.0f)
-		m_zoom = 1.0f;
-	if (m_zoom > 135.0f)
-		m_zoom = 135.0f;
+	m_fov -= (float)yoffset;
+	if (m_fov < 1.0f)
+		m_fov = 1.0f;
+	if (m_fov > 135.0f)
+		m_fov = 135.0f;
 }
 
-void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
+void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
 	xoffset *= m_mouseSensitivity;
 	yoffset *= m_mouseSensitivity;
@@ -62,9 +62,24 @@ std::shared_ptr<Camera> Camera::GetInstance()
 Camera::Camera(glm::vec3 position, glm::vec3 up_vec)
 {
 	updateCameraVectors();
+	UpdateViewMatrix();
+	UpdateOrthogonalProjectionMatrix();
+	UpdatePerspectiveProjectionMatrix();
+}
+
+void Camera::UpdateViewMatrix()
+{
 	m_viewMatrix = glm::lookAt(m_position, m_position + m_front_vec, m_up_vec);
-	m_prospectiveProjectionMatrix = glm::perspective(glm::radians(m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, m_near, m_far);
+}
+
+void Camera::UpdateOrthogonalProjectionMatrix()
+{
 	m_orthogonalProjectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);
+}
+
+void Camera::UpdatePerspectiveProjectionMatrix()
+{
+	m_prospectiveProjectionMatrix = glm::perspective(glm::radians(m_fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, m_near, m_far);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
