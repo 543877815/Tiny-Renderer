@@ -283,5 +283,11 @@
     <ClInclude Include="src\draw\vertexbuffer.h">
       <Filter>draw</Filter>
     </ClInclude>
+    <ClInclude Include="src\register\register_config.h">
+      <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\register\common.h">
+      <Filter>register</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

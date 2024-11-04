@@ -4,20 +4,20 @@
 std::shared_ptr<RenderObjectManager> RenderObjectManager::instance = nullptr;
 RenderObjectManager::RenderObjectManager()
 {
-	register_render_obj = renderable::GetRegisterRenderObj();
+	register_render_obj = Registry::GetRegisterRenderObj();
 }
 
-std::vector<RenderObjectManager::RenderObjConfig>& RenderObjectManager::GetObjConfigs()
+std::vector<Registry::RenderObjConfig>& RenderObjectManager::GetObjConfigs()
 {
 	return obj_configs;
 }
 
-RenderObjectManager::RenderObjConfig& RenderObjectManager::GetObjConfig(size_t idx)
+Registry::RenderObjConfig& RenderObjectManager::GetObjConfig(size_t idx)
 {
 	return obj_configs[idx];
 }
 
-std::vector<std::shared_ptr<renderable::RenderObjectBase>>& RenderObjectManager::GetRenderObjs()
+std::vector<std::shared_ptr<Renderable::RenderObjectBase>>& RenderObjectManager::GetRenderObjs()
 {
 	return render_objs;
 }
@@ -71,7 +71,7 @@ void RenderObjectManager::ParseCameraConfig(const std::string& path)
 	}
 
 	for (const auto& elem : document.GetArray()) {
-		RenderObjConfig config;
+		Registry::RenderObjConfig config;
 		if (!elem.IsObject()) {
 			std::cerr << "Element is not an object." << std::endl;
 			continue;

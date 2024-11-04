@@ -5,7 +5,7 @@
 
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum Camera_Movement {
+enum CameraMovement {
 	FORWARD,
 	BACKWARD,
 	LEFT,
@@ -16,6 +16,11 @@ enum Camera_Movement {
 	YAW_UP,
 	PITCH_LEFT,
 	PITCH_RIGHT
+};
+
+enum CameraProjection {
+	PERSPECTIVE,
+	ORTHOGONAL
 };
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -31,27 +36,30 @@ public:
 		Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ)) {}
 
 	void SetViewMatrix(glm::mat4 mat) { m_viewMatrix = mat; }
-	glm::mat4& GetViewMatrix() { return m_viewMatrix; }
-	glm::mat4& GetOrthogonalProjectionMatrix() { return m_orthogonalProjectionMatrix; }
-	glm::mat4& GetPerspectiveProjectionMatrix() { return m_prospectiveProjectionMatrix; }
-	void SetPosition(glm::vec3 position) { m_position = position; }
-	glm::vec3& GetPosition() { return m_position; }
-	float& GetFov() { return m_fov; }
-	float& GetNear() { return m_near; }
-	float& GetFar() { return m_far; }
-	float& GetLeft() { return m_left; }
-	float& GetRight() { return m_right; }
-	float& GetTop() { return m_top; }
-	float& GetBottom() { return m_bottom; }
+	const glm::mat4& GetViewMatrix() const { return m_viewMatrix; }
+	const glm::mat4& GetOrthogonalProjectionMatrix() const { return m_orthogonalProjectionMatrix; }
+	const glm::mat4& GetPerspectiveProjectionMatrix() const { return m_prospectiveProjectionMatrix; }
+	const glm::mat4& GetProjectionMatrix() const { return m_camera_projection == PERSPECTIVE ? m_prospectiveProjectionMatrix : m_orthogonalProjectionMatrix; }
+	const glm::vec3& GetPosition() const { return m_position; }
+	float GetFov() const { return m_fov; }
+	float GetNear() const { return m_near; }
+	float GetFar() const { return m_far; }
+	float GetLeft() const { return m_left; }
+	float GetRight() const { return m_right; }
+	float GetTop() const { return m_top; }
+	float GetBottom() const { return m_bottom; }
+	CameraProjection GetCameraProjection() const { return m_camera_projection; }
 	void UpdateViewMatrix();
 	void UpdateOrthogonalProjectionMatrix();
 	void UpdatePerspectiveProjectionMatrix();
+	void SetPosition(glm::vec3 position) { m_position = position; }
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-	void ProcessKeyboard(Camera_Movement direction, float deltaTime);
+	void ProcessKeyboard(CameraMovement direction, float deltaTime);
 	// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 	void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 	// processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(float yoffset);
+	void RenderController();
 
 private:
 	void updateCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
@@ -81,6 +89,7 @@ private:
 	glm::mat4 m_viewMatrix;
 	glm::mat4 m_prospectiveProjectionMatrix;
 	glm::mat4 m_orthogonalProjectionMatrix;
+	CameraProjection m_camera_projection = CameraProjection::PERSPECTIVE;
 	// singleton
 	static std::shared_ptr<Camera> m_instance;
 };

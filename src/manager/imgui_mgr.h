@@ -20,7 +20,7 @@ public:
 	static std::shared_ptr<ImGuiManager> GetInstance(GLFWwindow* window = nullptr);
 	float* GetClearColor() { return m_clear_color; }
 	void Render(std::vector <std::function<void()>>& func);
-	void Controller();
+	void CameraController();
 	explicit ImGuiManager(GLFWwindow* window);
 	~ImGuiManager();
 

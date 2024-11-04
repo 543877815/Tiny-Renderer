@@ -9,7 +9,7 @@
 #include "../manager/render_obj_mgr.h"
 #include "../parser/config.h"
 #include "../draw/camera.h"
-
+#include "../register/register_config.h"
 
 class RenderMain {
 public:
@@ -61,18 +61,12 @@ public:
 		m_last_frame = currentFrame;
 	}
 
-	void SetUpUniform(std::unordered_map<std::string, std::any>& uniform, const RenderObjectManager::RenderObjConfig& config) {
+	void SetUpUniform(std::unordered_map<std::string, std::any>& uniform, const Registry::RenderObjConfig& config) {
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4& view = m_camera->GetViewMatrix();
-
-
+		glm::mat4& projection = m_camera->GetProjectionMatrix();
 		if (config.uniform.count("projection")) {
-			if (config.projection == "orthogonal") {
-				uniform.emplace("projection", m_camera->GetOrthogonalProjectionMatrix());
-			}
-			else {
-				uniform.emplace("projection", m_camera->GetPerspectiveProjectionMatrix());
-			}
+			uniform.emplace("projection", projection);
 		}
 		if (config.uniform.count("view")) {
 			uniform.emplace("view", view);
@@ -124,8 +118,8 @@ private:
 	std::shared_ptr<RenderObjectManager> m_render_obj_mgr = nullptr;
 	std::shared_ptr< ImGuiManager> m_imgui_mgr = nullptr;
 	GLFWwindow* m_window = nullptr;
-	std::vector<std::shared_ptr<renderable::RenderObjectBase>> m_render_objs;
-	std::vector<RenderObjectManager::RenderObjConfig> m_render_obj_configs;
+	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> m_render_objs;
+	std::vector<Registry::RenderObjConfig> m_render_obj_configs;
 	static std::shared_ptr<RenderMain> m_instance;
 	float m_last_frame = 0;
 };

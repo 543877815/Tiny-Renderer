@@ -138,44 +138,44 @@ void processViewCamera(GLFWwindow* window, const int& SCR_WIDTH, const int& SCR_
 	glm::mat4 inverseMatrix = glm::inverse(camera->GetViewMatrix());
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		if (shift) {
-			translate4(inverseMatrix, 0, -transitionSpeed, 0);
+			translate4(inverseMatrix, 0.0f, -transitionSpeed, 0.0f);
 		}
 		else {
-			translate4(inverseMatrix, 0, 0, transitionSpeed);
+			translate4(inverseMatrix, 0.0f, 0.0f, transitionSpeed);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		if (shift) {
-			translate4(inverseMatrix, 0, transitionSpeed, 0);
+			translate4(inverseMatrix, 0.0f, transitionSpeed, 0.0f);
 		}
 		else {
-			translate4(inverseMatrix, 0, 0, -transitionSpeed);
+			translate4(inverseMatrix, 0.0f, 0.0f, -transitionSpeed);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		translate4(inverseMatrix, -transitionSpeed, 0, 0);
+		translate4(inverseMatrix, -transitionSpeed, 0.0f, 0.0f);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		translate4(inverseMatrix, transitionSpeed, 0, 0);
+		translate4(inverseMatrix, transitionSpeed, 0.0f, 0.0f);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 0, 1, 0);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 0, 1, 0);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 0, 0, 1);
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 0, 0, 1);
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 1, 0, 0);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 1, 0, 0);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 0.0f, 1.0f, 0.0f);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 0.0f, 1.0f, 0.0f);
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 0.0f, 0.0f, 1.0f);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 0.0f, 0.0f, 1.0f);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) rotate4(inverseMatrix, rotationSpeed, 1.0f, 0.0f, 0.0f);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) rotate4(inverseMatrix, -rotationSpeed, 1.0f, 0.0f, 0.0f);
 
 	if (KeyJ || KeyK || KeyL || KeyI) {
-		int d = 4;
+		float d = 4.0f;
 		float dx = 20.0f / static_cast<float>(SCR_WIDTH);
 		float dy = 20.0f / static_cast<float>(SCR_HEIGHT);
-		translate4(inverseMatrix, 0, 0, d);
-		if (KeyJ) rotate4(inverseMatrix, -dx, 0, 1, 0);
-		if (KeyL) rotate4(inverseMatrix, dx, 0, 1, 0);
-		if (KeyI) rotate4(inverseMatrix, dy, 1, 0, 0);
-		if (KeyK) rotate4(inverseMatrix, -dy, 1, 0, 0);
-		translate4(inverseMatrix, 0, 0, -d);
+		translate4(inverseMatrix, 0.0f, 0.0f, d);
+		if (KeyJ) rotate4(inverseMatrix, -dx, 0.0f, 1.0f, 0.0f);
+		if (KeyL) rotate4(inverseMatrix, dx, 0.0f, 1.0f, 0.0f);
+		if (KeyI) rotate4(inverseMatrix, dy, 1.0f, 0.0f, 0.0f);
+		if (KeyK) rotate4(inverseMatrix, -dy, 1.0f, 0.0f, 0.0f);
+		translate4(inverseMatrix, 0.0f, 0.0f, -d);
 	}
 
 	/****************** Mouse ************************/
@@ -206,11 +206,11 @@ void processViewCamera(GLFWwindow* window, const int& SCR_WIDTH, const int& SCR_
 		glfwGetCursorPos(window, &xpos, &ypos);
 		dx = (5 * (xpos - lastX)) / SCR_WIDTH;
 		dy = (5 * (ypos - lastY)) / SCR_HEIGHT;
-		int d = 4;
-		translate4(inverseMatrix, 0, 0, d);
-		rotate4(inverseMatrix, dx, 0, 1, 0);
-		rotate4(inverseMatrix, -dy, 1, 0, 1);
-		translate4(inverseMatrix, 0, 0, -d);
+		float d = 4.0f;
+		translate4(inverseMatrix, 0.0f, 0.0f, d);
+		rotate4(inverseMatrix, static_cast<float>(dx), 0.0f, 1.0f, 0.0f);
+		rotate4(inverseMatrix, static_cast<float>(-dy), 1.0f, 0.0f, 1.0f);
+		translate4(inverseMatrix, 0.0f, 0.0f, -d);
 
 		lastX = xpos;
 		lastY = ypos;

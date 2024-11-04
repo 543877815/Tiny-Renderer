@@ -200,6 +200,8 @@
     <ClInclude Include="src\manager\render_obj_mgr.h" />
     <ClInclude Include="src\parser\config.h" />
     <ClInclude Include="src\parser\config_parser.h" />
+    <ClInclude Include="src\register\common.h" />
+    <ClInclude Include="src\register\register_config.h" />
     <ClInclude Include="src\register\register_render_obj.h" />
     <ClInclude Include="src\render_objs\aabb.h" />
     <ClInclude Include="src\render_objs\aabb_obj.h" />

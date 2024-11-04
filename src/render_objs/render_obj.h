@@ -8,7 +8,7 @@
 #include "../draw/shader_s.h"
 #include "../draw/texture.h"
 
-#define RENDERABLE_BEGIN namespace renderable {
+#define RENDERABLE_BEGIN namespace Renderable {
 #define RENDERABLE_END }
 
 RENDERABLE_BEGIN

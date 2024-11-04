@@ -1,6 +1,11 @@
 #include "camera.h"
 #include "../parser/config.h"
 #include <mutex>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <glm/gtc/type_ptr.hpp>
+
 extern const int SCR_WIDTH;
 extern const int SCR_HEIGHT;
 
@@ -25,6 +30,71 @@ void Camera::ProcessMouseScroll(float yoffset)
 		m_fov = 1.0f;
 	if (m_fov > 135.0f)
 		m_fov = 135.0f;
+}
+
+void Camera::RenderController()
+{
+	static bool isFolded = true;
+	if (ImGui::CollapsingHeader("Camera", &isFolded, ImGuiTreeNodeFlags_DefaultOpen))  // default open
+	{
+
+		static int selected_option = 0;
+		if (ImGui::RadioButton("Perspective Projection", &selected_option, 0))
+		{
+			m_camera_projection = PERSPECTIVE;
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Orthogonal Projection", &selected_option, 1))
+		{
+			m_camera_projection = ORTHOGONAL;
+		}
+
+		if (ImGui::SliderFloat3("Position", glm::value_ptr(m_position), -10.0f, 10.0f))
+		{
+			UpdateViewMatrix();
+		}
+
+		if (m_camera_projection == PERSPECTIVE && ImGui::SliderFloat("Fov", &m_fov, 15.0f, 150.0f))
+		{
+			UpdatePerspectiveProjectionMatrix();
+		}
+
+		if (ImGui::SliderFloat("Near Plain", &m_near, 0.1, 5.0f))
+		{
+			if (m_camera_projection == PERSPECTIVE)
+				UpdatePerspectiveProjectionMatrix();
+			else
+				UpdateOrthogonalProjectionMatrix();
+		}
+
+		if (ImGui::SliderFloat("Far Plain", &m_far, 1000.0f, 2000.f))
+		{
+			if (m_camera_projection == PERSPECTIVE)
+				UpdatePerspectiveProjectionMatrix();
+			else
+				UpdateOrthogonalProjectionMatrix();
+		}
+
+		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Left Plain", &m_left, -1.0f, -1.4f))
+		{
+			UpdateOrthogonalProjectionMatrix();
+		}
+
+		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Right Plain", &m_right, 1.0f, 1.4f))
+		{
+			UpdateOrthogonalProjectionMatrix();
+		}
+
+		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Top Plain", &m_top, 1.0f, 1.4f))
+		{
+			UpdateOrthogonalProjectionMatrix();
+		}
+
+		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Bottom Plain", &m_bottom, -1.0f, -1.4f))
+		{
+			UpdateOrthogonalProjectionMatrix();
+		}
+	}
 }
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
@@ -82,7 +152,7 @@ void Camera::UpdatePerspectiveProjectionMatrix()
 	m_prospectiveProjectionMatrix = glm::perspective(glm::radians(m_fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, m_near, m_far);
 }
 
-void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
+void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
 	float velocity = m_movementSpeed * deltaTime;
 	if (direction == FORWARD)
