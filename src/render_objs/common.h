@@ -11,5 +11,6 @@
 #include <typeindex>
 
 #include "render_obj.h"
+#include "../register/register_config.h"
 
 

@@ -5,7 +5,7 @@
 RENDERABLE_BEGIN
 class EllipsoidObj : public RenderObject<glm::vec3, uint32_t> {
 public:
-	EllipsoidObj();
+	EllipsoidObj(Registry::RenderObjConfig& config);
 	std::shared_ptr<AABB> GetAABB();
 
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);

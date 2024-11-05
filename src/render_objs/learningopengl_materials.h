@@ -24,7 +24,7 @@ static struct Light {
 
 class LearningOpenGLMaterial : public RenderObject<Vertices, uint32_t> {
 public:
-	LearningOpenGLMaterial();
+	LearningOpenGLMaterial(Registry::RenderObjConfig& config);
 
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	void ImGuiCallback();

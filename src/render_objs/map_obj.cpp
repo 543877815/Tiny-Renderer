@@ -1,7 +1,7 @@
 #include "map_obj.h"
 #include <math.h>
 RENDERABLE_BEGIN
-MapObj::MapObj()
+MapObj::MapObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader();

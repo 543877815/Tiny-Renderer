@@ -26,7 +26,7 @@ private:
 private:
 	static std::shared_ptr<RenderObjectManager> instance;
 	std::vector<Registry::RenderObjConfig> obj_configs;
-	std::unordered_map<std::string, std::function<std::shared_ptr<Renderable::RenderObjectBase>()>> register_render_obj;
+	std::unordered_map<std::string, Registry::CreateRenderObjFuncPtr> register_render_obj;
 	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> render_objs;
 };
 

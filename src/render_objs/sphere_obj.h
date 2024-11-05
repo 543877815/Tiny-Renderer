@@ -14,7 +14,7 @@ RENDERABLE_BEGIN
 class SphereObj : public RenderObject<glm::vec3, uint32_t> {
 
 public:
-	SphereObj();
+	SphereObj(Registry::RenderObjConfig& config);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	virtual void ImGuiCallback();
 	~SphereObj() = default;

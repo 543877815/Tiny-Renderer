@@ -1,7 +1,7 @@
 #include "box_obj.h"
 
 RENDERABLE_BEGIN
-BoxObj::BoxObj()
+BoxObj::BoxObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader();

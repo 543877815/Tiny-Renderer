@@ -4,7 +4,7 @@
 std::shared_ptr<RenderObjectManager> RenderObjectManager::instance = nullptr;
 RenderObjectManager::RenderObjectManager()
 {
-	register_render_obj = Registry::GetRegisterRenderObj();
+	register_render_obj = Registry::RenderObjectFactory::GetRegisterRenderObj();
 }
 
 std::vector<Registry::RenderObjConfig>& RenderObjectManager::GetObjConfigs()
@@ -45,7 +45,7 @@ void RenderObjectManager::InitRenderObj(const std::string& config)
 		auto& obj_config = obj_configs[i];
 		auto& obj_type = obj_config.obj_type;
 		if (register_render_obj.count(obj_type)) {
-			render_objs.emplace_back(register_render_obj[obj_type]());
+			render_objs.emplace_back(register_render_obj[obj_type](obj_config));
 		}
 		else {
 			std::cerr << std::format("Error occur: the object: {} is not regisered yet.", obj_type) << std::endl;

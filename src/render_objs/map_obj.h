@@ -30,7 +30,7 @@ static struct Point {
 class MapObj : public RenderObject<Point, uint32_t> {
 
 public:
-	MapObj();
+	MapObj(Registry::RenderObjConfig& config);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	void ImGuiCallback();
 
