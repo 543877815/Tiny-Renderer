@@ -63,8 +63,8 @@ public:
 
 	void SetUpUniform(std::unordered_map<std::string, std::any>& uniform, const Registry::RenderObjConfig& config) {
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4& view = m_camera->GetViewMatrix();
-		glm::mat4& projection = m_camera->GetProjectionMatrix();
+		const glm::mat4& view = m_camera->GetViewMatrix();
+		const glm::mat4& projection = m_camera->GetProjectionMatrix();
 		if (config.uniform.count("projection")) {
 			uniform.emplace("projection", projection);
 		}
