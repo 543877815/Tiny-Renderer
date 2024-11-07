@@ -172,6 +172,8 @@
     <ClCompile Include="src\draw\texture.cpp" />
     <ClCompile Include="src\draw\vertexbuffer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\manager\callback.cpp" />
+    <ClCompile Include="src\manager\glfw_mgr.cpp" />
     <ClCompile Include="src\manager\imgui_mgr.cpp" />
     <ClCompile Include="src\manager\render_obj_mgr.cpp" />
     <ClCompile Include="src\parser\config_parser.cpp" />
@@ -184,7 +186,6 @@
     <ClCompile Include="src\render_objs\map_obj.cpp" />
     <ClCompile Include="src\render_objs\rectangle2d_obj.cpp" />
     <ClCompile Include="src\render_objs\sphere_obj.cpp" />
-    <ClCompile Include="src\render_objs\splat_obj.cpp" />
     <ClCompile Include="thirdparty\glad.c" />
   </ItemGroup>
   <ItemGroup>
@@ -214,7 +215,6 @@
     <ClInclude Include="src\render_objs\rectangle2d_obj.h" />
     <ClInclude Include="src\render_objs\render_obj.h" />
     <ClInclude Include="src\render_objs\sphere_obj.h" />
-    <ClInclude Include="src\render_objs\splat_obj.h" />
     <ClInclude Include="src\threadpool\threadpool.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>

@@ -36,3 +36,13 @@ std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits
 	out.write(value.data(), static_cast<std::streamsize>(value.size()));
 	return out;
 }
+
+void limitValueRange(float& value, float lowerLimit, float upperLimit) {
+	float range = upperLimit - lowerLimit;
+	while (value > upperLimit) {
+		value -= range;
+	}
+	while (value < lowerLimit) {
+		value += range;
+	}
+}

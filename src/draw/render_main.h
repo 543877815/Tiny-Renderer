@@ -24,13 +24,14 @@ public:
 
 	RenderMain() {
 		m_glfw_instance = GLFWManager::GetInstance(SCR_WIDTH, SCR_HEIGHT);
-		m_glfw_instance->SetFrameBufferSizeCallback(framebufferSizeCallback);
-		m_glfw_instance->SetMouseButtonCallback(mouseButtonCallback);
-		m_glfw_instance->SetMouseCallback(mouseCallback);
-		m_glfw_instance->SetScrollCallback(scrollCallback);
-		m_glfw_instance->SetKeyCallback(keyCallback);
+		m_glfw_instance->SetFrameBufferSizeCallback(FramebufferSizeCallback);
+		m_glfw_instance->SetMouseButtonCallback(MouseButtonCallback);
+		m_glfw_instance->SetMouseCallback(MouseCallback);
+		m_glfw_instance->SetScrollCallback(ScrollCallback);
+		m_glfw_instance->SetKeyCallback(KeyCallback);
 
 		m_camera = Camera::GetInstance();
+		m_camera->SetScreen(SCR_WIDTH, SCR_HEIGHT);
 		m_window = m_glfw_instance->GetWindow();
 		m_render_obj_mgr = RenderObjectManager::GetInstance();
 		m_imgui_mgr = ImGuiManager::GetInstance(m_window);
@@ -57,8 +58,17 @@ public:
 		glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
 
 		float currentFrame = static_cast<float>(glfwGetTime());
-		float deltaTime = currentFrame - m_last_frame;
+		m_delta_time = currentFrame - m_last_frame;
 		m_last_frame = currentFrame;
+
+		ProcessInput(m_window, m_delta_time);
+
+		// mvp transform
+		//processViewWorld(m_window);
+
+		//processViewCamera(m_window, SCR_WIDTH, SCR_HEIGHT);
+		//processModelMatrix(m_window, model);
+
 	}
 
 	void SetUpUniform(std::unordered_map<std::string, std::any>& uniform, const Registry::RenderObjConfig& config) {
@@ -79,12 +89,7 @@ public:
 	void Draw() {
 		glm::mat4 model = glm::mat4(1.0f);
 
-		// mvp transform
-		//processInput(window, camera, deltaTime);
-		//processViewWorld(window, camera);
 
-		processViewCamera(m_window, SCR_WIDTH, SCR_HEIGHT);
-		processModelMatrix(m_window, model);
 		std::vector<std::function<void()>> functions;
 
 		for (size_t i = 0; i < m_render_objs.size(); i++) {
@@ -121,7 +126,8 @@ private:
 	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> m_render_objs;
 	std::vector<Registry::RenderObjConfig> m_render_obj_configs;
 	static std::shared_ptr<RenderMain> m_instance;
-	float m_last_frame = 0;
+	float m_last_frame = 0.0;
+	float m_delta_time = 0.0;
 };
 
 std::shared_ptr<RenderMain> RenderMain::m_instance = nullptr;

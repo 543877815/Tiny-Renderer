@@ -15,7 +15,19 @@ enum CameraMovement {
 	YAW_DONW,
 	YAW_UP,
 	PITCH_LEFT,
-	PITCH_RIGHT
+	PITCH_RIGHT,
+	CAMERA_ROTATE_LEFT,
+	CAMERA_ROTATE_RIGHT,
+	CAMERA_ROTATE_UP,
+	CAMERA_ROTATE_DOWN,
+	CAMERA_ROTATE_CLOCKWISE,
+	CAMERA_ROTATE_ANTICLOCKWISE,
+	SCREEN_MOVE_LEFT,
+	SCREEN_MOVE_RIGHT,
+	SCREEN_MOVE_UP,
+	SCREEN_MOVE_DOWN,
+	SCREEN_MOVE_FORWARD,
+	SCREEN_MOVE_BACKWARD
 };
 
 enum CameraProjection {
@@ -53,6 +65,7 @@ public:
 	void UpdateOrthogonalProjectionMatrix();
 	void UpdatePerspectiveProjectionMatrix();
 	void SetPosition(glm::vec3 position) { m_position = position; }
+	void SetScreen(int width, int height);
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(CameraMovement direction, float deltaTime);
 	// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -62,8 +75,9 @@ public:
 	void RenderController();
 
 private:
-	void updateCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
-
+	void UpdateCameraRotationSphere(const glm::vec3& axis, float angle);
+	void UpdateCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
+	void translate4(glm::mat4& matrix, float x, float y, float z);
 private:
 	// camera Attributes
 	glm::vec3 m_position = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -71,10 +85,14 @@ private:
 	glm::vec3 m_up_vec = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 m_right_vec = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 m_worldUp_vec = glm::vec3(0.0f, 1.0f, 0.0f);
+	bool m_facing_origin = true;
 	// euler Angles
 	float m_yaw = -90.0f;
 	float m_pitch = 0.0f;
+	float m_roll = 0.0f;
 	// camera options
+	float m_rotation_speed = 2.0f;
+	float m_transition_speed = 2.0f;
 	float m_movementSpeed = 2.5f;
 	float m_mouseSensitivity = 0.1f;;
 	// projection relative
@@ -85,6 +103,15 @@ private:
 	float m_right = 1.2f;
 	float m_bottom = -1.2f;
 	float m_top = 1.2f;
+	// speed
+	float m_view_transition_speed = 0.001f;
+	float m_view_rotation_speed = 0.005f;
+	float m_model_transition_speed = 0.001f;
+	float m_model_rotation_speed = 0.005f;
+	// screen
+	int m_screen_width = 800;
+	int m_screen_height = 600;
+	float m_screen_aspect_rate = (float)m_screen_width / (float)m_screen_height;
 	// camera matrix
 	glm::mat4 m_viewMatrix;
 	glm::mat4 m_prospectiveProjectionMatrix;

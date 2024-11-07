@@ -137,9 +137,6 @@
     <ClCompile Include="src\render_objs\sphere_obj.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
-    <ClCompile Include="src\render_objs\splat_obj.cpp">
-      <Filter>render_objs</Filter>
-    </ClCompile>
     <ClCompile Include="src\render_objs\aabb_obj.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
@@ -200,6 +197,9 @@
     <ClCompile Include="src\draw\vertexbuffer.cpp">
       <Filter>draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\manager\callback.cpp">
+      <Filter>manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\render_objs\ellipsoid_obj.h">
@@ -218,9 +218,6 @@
       <Filter>render_objs</Filter>
     </ClInclude>
     <ClInclude Include="src\render_objs\sphere_obj.h">
-      <Filter>render_objs</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render_objs\splat_obj.h">
       <Filter>render_objs</Filter>
     </ClInclude>
     <ClInclude Include="src\render_objs\aabb.h">
