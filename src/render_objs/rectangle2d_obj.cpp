@@ -1,7 +1,7 @@
 #include "rectangle2d_obj.h"
 
 RENDERABLE_BEGIN
-Rectangle2DObj::Rectangle2DObj(Registry::RenderObjConfig& config)
+Rectangle2DObj::Rectangle2DObj(Parser::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader(config);

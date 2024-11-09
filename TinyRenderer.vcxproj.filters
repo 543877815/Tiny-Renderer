@@ -13,9 +13,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="manager">
-      <UniqueIdentifier>{41516214-feaa-4046-9f82-84949440097e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="register">
       <UniqueIdentifier>{a96e8d07-d750-487d-bda0-f433c302f14c}</UniqueIdentifier>
     </Filter>
@@ -48,6 +45,9 @@
     </Filter>
     <Filter Include="draw">
       <UniqueIdentifier>{44ab92bb-c24b-4b59-b7ff-f2ba36f9c86b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="manager">
+      <UniqueIdentifier>{41516214-feaa-4046-9f82-84949440097e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +203,9 @@
     <ClCompile Include="src\manager\glfw_mgr.cpp">
       <Filter>manager</Filter>
     </ClCompile>
+    <ClCompile Include="src\draw\render_main.cpp">
+      <Filter>draw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\render_objs\ellipsoid_obj.h">
@@ -283,11 +286,11 @@
     <ClInclude Include="src\draw\vertexbuffer.h">
       <Filter>draw</Filter>
     </ClInclude>
-    <ClInclude Include="src\register\register_config.h">
-      <Filter>register</Filter>
-    </ClInclude>
     <ClInclude Include="src\register\common.h">
       <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\parser\common.h">
+      <Filter>parser</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

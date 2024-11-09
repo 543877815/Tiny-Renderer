@@ -145,7 +145,7 @@ void ProcessModelMatrix(GLFWwindow* window, glm::mat4& modelMatrix)
  * Note: This method is deprecated. Use the ProcessInput() instead
  * Origin from: https://github.com/antimatter15/splat
  */
-void ProcessViewCamera(GLFWwindow* window, const int& SCR_WIDTH, const int& SCR_HEIGHT)
+void ProcessViewCamera(GLFWwindow* window, const int& screen_width, const int& screen_height)
 {
 	auto camera = Camera::GetInstance();
 	float transitionSpeed = 0.001f;
@@ -198,8 +198,8 @@ void ProcessViewCamera(GLFWwindow* window, const int& SCR_WIDTH, const int& SCR_
 
 	if (KeyJ || KeyK || KeyL || KeyI) {
 		float d = 4.0f;
-		float dx = 20.0f / static_cast<float>(SCR_WIDTH);
-		float dy = 20.0f / static_cast<float>(SCR_HEIGHT);
+		float dx = 20.0f / static_cast<float>(screen_width);
+		float dy = 20.0f / static_cast<float>(screen_height);
 		translate4(inverseMatrix, 0.0f, 0.0f, d);
 		if (KeyJ) rotate4(inverseMatrix, -dx, 0.0f, 1.0f, 0.0f);
 		if (KeyL) rotate4(inverseMatrix, dx, 0.0f, 1.0f, 0.0f);
@@ -234,8 +234,8 @@ void ProcessViewCamera(GLFWwindow* window, const int& SCR_WIDTH, const int& SCR_
 	if (isDragging) {
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
-		dx = (5 * (xpos - lastX)) / SCR_WIDTH;
-		dy = (5 * (ypos - lastY)) / SCR_HEIGHT;
+		dx = (5 * (xpos - lastX)) / screen_width;
+		dy = (5 * (ypos - lastY)) / screen_height;
 		float d = 4.0f;
 		translate4(inverseMatrix, 0.0f, 0.0f, d);
 		rotate4(inverseMatrix, static_cast<float>(dx), 0.0f, 1.0f, 0.0f);

@@ -5,7 +5,7 @@
 RENDERABLE_BEGIN
 class BoxObj : public RenderObject<float, uint32_t> {
 public:
-	BoxObj(Registry::RenderObjConfig& config);
+	BoxObj(Parser::RenderObjConfig& config);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:

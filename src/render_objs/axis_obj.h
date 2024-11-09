@@ -4,7 +4,7 @@
 RENDERABLE_BEGIN
 class AxisObj : public RenderObject<float, uint32_t> {
 public:
-	AxisObj(Registry::RenderObjConfig& config) {
+	AxisObj(Parser::RenderObjConfig& config) {
 		SetUpData();
 		SetUpShader(config);
 	}

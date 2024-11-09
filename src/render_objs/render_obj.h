@@ -7,7 +7,7 @@
 
 #include "../draw/shader_s.h"
 #include "../draw/texture.h"
-#include "../register/register_config.h"
+#include "../parser/config_parser.h"
 
 #define RENDERABLE_BEGIN namespace Renderable {
 #define RENDERABLE_END }
@@ -57,7 +57,7 @@ protected:
 	std::unique_ptr<Shader> m_shader = nullptr;
 	std::unique_ptr<Texture> m_textures = nullptr;
 	std::vector<size_t> m_textureIdx{};
-	virtual void SetUpShader(const Registry::RenderObjConfig& config);
+	virtual void SetUpShader(const Parser::RenderObjConfig& config);
 	virtual void SetUpShader() {};
 	virtual void SetUpData() {};
 	virtual void SetUpTexture(int num = 0) {};
@@ -81,7 +81,7 @@ protected:
 };
 
 template<typename vT, typename iT>
-inline void RenderObject<vT, iT>::SetUpShader(const Registry::RenderObjConfig& config)
+inline void RenderObject<vT, iT>::SetUpShader(const Parser::RenderObjConfig& config)
 {
 	m_shader = std::make_unique<Shader>(config.vertex_shader.c_str(), config.fragment_shader.c_str());
 }

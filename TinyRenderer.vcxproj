@@ -167,6 +167,7 @@
     <ClCompile Include="include\imgui\imgui_tables.cpp" />
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\draw\camera.cpp" />
+    <ClCompile Include="src\draw\render_main.cpp" />
     <ClCompile Include="src\draw\shader_c.cpp" />
     <ClCompile Include="src\draw\shader_s.cpp" />
     <ClCompile Include="src\draw\texture.cpp" />
@@ -199,10 +200,10 @@
     <ClInclude Include="src\manager\glfw_mgr.h" />
     <ClInclude Include="src\manager\imgui_mgr.h" />
     <ClInclude Include="src\manager\render_obj_mgr.h" />
+    <ClInclude Include="src\parser\common.h" />
     <ClInclude Include="src\parser\config.h" />
     <ClInclude Include="src\parser\config_parser.h" />
     <ClInclude Include="src\register\common.h" />
-    <ClInclude Include="src\register\register_config.h" />
     <ClInclude Include="src\register\register_render_obj.h" />
     <ClInclude Include="src\render_objs\aabb.h" />
     <ClInclude Include="src\render_objs\aabb_obj.h" />

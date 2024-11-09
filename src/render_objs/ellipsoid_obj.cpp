@@ -1,7 +1,7 @@
 #include "ellipsoid_obj.h"
 
 RENDERABLE_BEGIN
-EllipsoidObj::EllipsoidObj(Registry::RenderObjConfig& config)
+EllipsoidObj::EllipsoidObj(Parser::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader(config);

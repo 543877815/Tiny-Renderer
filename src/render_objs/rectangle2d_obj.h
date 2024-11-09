@@ -5,7 +5,7 @@
 RENDERABLE_BEGIN
 class Rectangle2DObj : public RenderObject<float, uint32_t> {
 public:
-	Rectangle2DObj(Registry::RenderObjConfig& config);
+	Rectangle2DObj(Parser::RenderObjConfig& config);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:

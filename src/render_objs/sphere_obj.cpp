@@ -1,7 +1,7 @@
 #include "sphere_obj.h"
 
 RENDERABLE_BEGIN
-SphereObj::SphereObj(Registry::RenderObjConfig& config)
+SphereObj::SphereObj(Parser::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader();

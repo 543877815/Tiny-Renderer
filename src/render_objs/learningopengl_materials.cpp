@@ -1,7 +1,7 @@
 #include "learningopengl_materials.h"
 
 RENDERABLE_BEGIN
-LearningOpenGLMaterial::LearningOpenGLMaterial(Registry::RenderObjConfig& config)
+LearningOpenGLMaterial::LearningOpenGLMaterial(Parser::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader();

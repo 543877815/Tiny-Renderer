@@ -1,7 +1,7 @@
 #include "map_obj.h"
 #include <math.h>
 RENDERABLE_BEGIN
-MapObj::MapObj(Registry::RenderObjConfig& config)
+MapObj::MapObj(Parser::RenderObjConfig& config)
 {
 	SetUpData();
 	SetUpShader(config);
@@ -11,14 +11,14 @@ MapObj::MapObj(Registry::RenderObjConfig& config)
 
 #define PI 3.1415926535
 void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
-	float lon = uv.x * 180;
-	float lat = uv.y * 90;
+	float lon = uv.x * 180.0f;
+	float lat = uv.y * 90.0f;
 
-	float radlon = (lon - 90) * PI / 180;
-	float radlat = lat * PI / 180;
+	float radlon = (lon - 90.0f) * PI / 180.0f;
+	float radlat = lat * PI / 180.0f;
 
-	const double earth_perimeter = 20037508.34;
-	const double earth_radius = 6378137.0;
+	const double earth_perimeter = 20037508.34f;
+	const double earth_radius = 6378137.0f;
 
 	xyz.x = cos(radlat) * cos(radlon);
 	xyz.y = sin(radlat);
@@ -26,10 +26,10 @@ void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
 
 	if (abs(lat) < 85) {
 		float WebMercatorX = earth_radius * radlon;
-		float WebMercatorY = earth_radius * log(tan((PI / 4) + (radlat / 2)));
+		float WebMercatorY = earth_radius * log(tan((PI / 4.0f) + (radlat / 2.0f)));
 
-		xyz.u = (WebMercatorX / earth_perimeter + 1.0) / 2.0;
-		xyz.v = (WebMercatorY / earth_perimeter + 1.0) / 2.0;
+		xyz.u = (WebMercatorX / earth_perimeter + 1.0f) / 2.0f;
+		xyz.v = (WebMercatorY / earth_perimeter + 1.0f) / 2.0f;
 	}
 	else {
 		xyz.u = uv.u;
@@ -43,8 +43,8 @@ void MapObj::SetUpData()
 	uint32_t num_vertices_per_row = m_grid_width + 1;
 	float grid_unit_width = (m_grid_right - m_grid_left) / m_grid_width;
 	float grid_unit_height = (m_grid_top - m_grid_bottom) / m_grid_height;
-	float uv_unit_width = 1.0 / m_grid_width;
-	float uv_unit_height = 1.0 / m_grid_height;
+	float uv_unit_width = 1.0f / m_grid_width;
+	float uv_unit_height = 1.0f / m_grid_height;
 
 	std::vector<Point> m_vertices;
 	std::vector<uint32_t> indices;
