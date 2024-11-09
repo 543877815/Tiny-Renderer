@@ -14,7 +14,6 @@ public:
 
 private:
 	void SetUpData() override;
-	void SetUpShader() override;
 
 private:
 	int m_number = 10000;

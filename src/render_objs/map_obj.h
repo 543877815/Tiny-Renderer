@@ -3,7 +3,7 @@
 
 RENDERABLE_BEGIN
 
-static struct Point {
+struct Point {
 	float x = 0.0, y = 0.0, z = 0.0;
 	float r = 0.0, g = 0.0, b = 0.0;
 	float u = 0.0, v = 0.0;
@@ -35,12 +35,8 @@ public:
 	void ImGuiCallback();
 
 private:
-	void SetUpGLStatus() {
-		glEnable(GL_DEPTH_TEST);
-	}
-
 	void SetUpTexture(int num = 0) override;
-	void SetUpShader() override;
+	void SetUpGLStatus();
 	void SetUpData() override;
 	void UV2XYZ(const Point& point, Point& xyz);
 

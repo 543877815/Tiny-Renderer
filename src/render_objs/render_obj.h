@@ -7,6 +7,7 @@
 
 #include "../draw/shader_s.h"
 #include "../draw/texture.h"
+#include "../register/register_config.h"
 
 #define RENDERABLE_BEGIN namespace Renderable {
 #define RENDERABLE_END }
@@ -50,15 +51,17 @@ private:
 	float m_pointSize = 0.0f;
 	std::vector<vT> m_vertices;
 	std::vector<iT> m_indices;
-	virtual void SetUpData() {};
-	virtual void SetUpShader() {};
-	virtual void SetUpTexture(int num = 0) {};
-	virtual void DrawObj(const std::unordered_map<std::string, std::any>& uniform) {};
+
 
 protected:
 	std::unique_ptr<Shader> m_shader = nullptr;
 	std::unique_ptr<Texture> m_textures = nullptr;
 	std::vector<size_t> m_textureIdx{};
+	virtual void SetUpShader(const Registry::RenderObjConfig& config);
+	virtual void SetUpShader() {};
+	virtual void SetUpData() {};
+	virtual void SetUpTexture(int num = 0) {};
+	virtual void DrawObj(const std::unordered_map<std::string, std::any>& uniform) {};
 
 	RenderObject() {}
 	~RenderObject();
@@ -76,6 +79,12 @@ protected:
 	void Draw();
 
 };
+
+template<typename vT, typename iT>
+inline void RenderObject<vT, iT>::SetUpShader(const Registry::RenderObjConfig& config)
+{
+	m_shader = std::make_unique<Shader>(config.vertex_shader.c_str(), config.fragment_shader.c_str());
+}
 
 template<typename vT, typename iT>
 inline RenderObject<vT, iT>::~RenderObject()

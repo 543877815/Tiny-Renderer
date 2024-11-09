@@ -4,7 +4,7 @@ RENDERABLE_BEGIN
 BoxObj::BoxObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
-	SetUpShader();
+	SetUpShader(config);
 	SetUpTexture(2);
 }
 
@@ -38,12 +38,6 @@ void BoxObj::SetUpTexture(int num)
 	m_shader->Use();
 	m_shader->SetInt("texture1", idx1);
 	m_shader->SetInt("texture2", idx2);
-
-}
-
-void BoxObj::SetUpShader()
-{
-	m_shader = std::make_unique<Shader>("./shader/box_vs.glsl", "./shader/box_fs.glsl");
 }
 
 void BoxObj::SetUpData()

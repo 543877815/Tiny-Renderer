@@ -11,7 +11,6 @@ public:
 private:
 	void SetUpGLStatus();
 	void SetUpTexture(int num = 0) override {}
-	void SetUpShader() override;
 	void SetUpData() override;
 };
 

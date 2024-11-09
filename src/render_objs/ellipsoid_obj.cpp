@@ -4,7 +4,7 @@ RENDERABLE_BEGIN
 EllipsoidObj::EllipsoidObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
-	SetUpShader();
+	SetUpShader(config);
 }
 
 std::shared_ptr<AABB> EllipsoidObj::GetAABB()
@@ -134,9 +134,5 @@ void EllipsoidObj::SetUpData()
 	SetPrimitive(GL_POINTS);
 }
 
-void EllipsoidObj::SetUpShader()
-{
-	m_shader = std::make_unique<Shader>("./shader/sphere_vs.glsl", "./shader/sphere_fs.glsl");
-}
 
 RENDERABLE_END

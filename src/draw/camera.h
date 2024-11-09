@@ -75,6 +75,7 @@ public:
 	void RenderController();
 
 private:
+	void UpdateViewMatrixAttr(glm::quat& quaternion);
 	void UpdateCameraRotationSphere(const glm::vec3& axis, float angle);
 	void UpdateCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
 	void translate4(glm::mat4& matrix, float x, float y, float z);
@@ -85,7 +86,7 @@ private:
 	glm::vec3 m_up_vec = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 m_right_vec = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 m_worldUp_vec = glm::vec3(0.0f, 1.0f, 0.0f);
-	bool m_facing_origin = true;
+	bool m_spherical_surface_rotation = true;
 	// euler Angles
 	float m_yaw = -90.0f;
 	float m_pitch = 0.0f;

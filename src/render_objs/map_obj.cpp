@@ -4,7 +4,8 @@ RENDERABLE_BEGIN
 MapObj::MapObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
-	SetUpShader();
+	SetUpShader(config);
+	SetUpGLStatus();
 	SetUpTexture(1);
 }
 
@@ -86,11 +87,11 @@ void MapObj::SetUpData()
 	SetMesh(&m_vertices, &vertex_info, &indices);
 }
 
-void MapObj::SetUpShader()
+void MapObj::SetUpGLStatus()
 {
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	m_shader = std::make_unique<Shader>("./shader/map_vs.glsl", "./shader/map_fs.glsl");
 }
 
 void MapObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)

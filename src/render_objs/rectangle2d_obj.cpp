@@ -4,7 +4,7 @@ RENDERABLE_BEGIN
 Rectangle2DObj::Rectangle2DObj(Registry::RenderObjConfig& config)
 {
 	SetUpData();
-	SetUpShader();
+	SetUpShader(config);
 	SetUpTexture();
 }
 
@@ -17,11 +17,6 @@ void Rectangle2DObj::DrawObj(const std::unordered_map<std::string, std::any>& un
 void Rectangle2DObj::SetUpGLStatus()
 {
 	glDisable(GL_DEPTH_TEST);
-}
-
-void Rectangle2DObj::SetUpShader()
-{
-	m_shader = std::make_unique<Shader>("./shader/rect_vs.glsl", "./shader/rect_fs.glsl");
 }
 
 void Rectangle2DObj::SetUpData()

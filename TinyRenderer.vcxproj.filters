@@ -200,6 +200,9 @@
     <ClCompile Include="src\manager\callback.cpp">
       <Filter>manager</Filter>
     </ClCompile>
+    <ClCompile Include="src\manager\glfw_mgr.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\render_objs\ellipsoid_obj.h">

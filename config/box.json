@@ -1,9 +1,9 @@
 [
   {
     "object": "axis",
+    "uniform": [ "projection", "view", "model" ],
     "vertex_shader": "./shader/axis_vs.glsl",
-    "fragment_shader": "./shader/axis_fs.glsl",
-    "uniform": [ "projection", "view", "model" ]
+    "fragment_shader": "./shader/axis_fs.glsl"
   },
   {
     "object": "box",

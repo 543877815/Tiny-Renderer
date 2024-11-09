@@ -10,72 +10,79 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
-
+#include <limits>
 std::shared_ptr<Camera> Camera::m_instance = nullptr;
-
-// 将四元数转换为旋转矩阵
-//glm::mat3 quaternionToRotationMatrix(const glm::quat& q) {
-//	glm::mat3 rotationMatrix;
-//	rotationMatrix[0][0] = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
-//	rotationMatrix[0][1] = 2 * q.x * q.y - 2 * q.w * q.z;
-//	rotationMatrix[0][2] = 2 * q.x * q.z + 2 * q.w * q.y;
-//	rotationMatrix[1][0] = 2 * q.x * q.y + 2 * q.w * q.z;
-//	rotationMatrix[1][1] = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
-//	rotationMatrix[1][2] = 2 * q.y * q.z - 2 * q.w * q.x;
-//	rotationMatrix[2][0] = 2 * q.x * q.z - 2 * q.w * q.y;
-//	rotationMatrix[2][1] = 2 * q.y * q.z + 2 * q.w * q.x;
-//	rotationMatrix[2][2] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
-//	return rotationMatrix;
-//}
-//
-//// 从旋转矩阵中提取Yaw角度
-//float extractYaw(const glm::mat3& rotationMatrix) {
-//	return std::atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
-//}
-//
-//// 从旋转矩阵中提取Pitch角度
-//float extractPitch(const glm::mat3& rotationMatrix) {
-//	return std::atan2(-rotationMatrix[2][0],
-//		std::sqrt(rotationMatrix[2][1] * rotationMatrix[2][1] + rotationMatrix[2][2] * rotationMatrix[2][2]));
-//}
 
 glm::vec3 rotateVector(const glm::vec3& vector, const glm::quat& rotationQuaternion)
 {
-	// 将物体的位置转化为四元数形式
+	// Convert the object's position to quaternion form
 	glm::quat positionQuaternion(0.0f, vector.x, vector.y, vector.z);
-	/// 用物体的旋转四元数旋转位置四元数
+	/// Rotate the position quaternion with the object's rotation quaternion.
 	glm::quat rotatedQuaternion = rotationQuaternion * positionQuaternion * glm::inverse(rotationQuaternion);
-	/// 返回旋转后的向量
 	return glm::vec3(rotatedQuaternion.x, rotatedQuaternion.y, rotatedQuaternion.z);
 }
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
+glm::vec3 Quaternion2EulerAngles(const glm::quat& quaternion)
+{
+	auto pitch = [](const glm::quat& q)
+		{
+			float const y = 2.0f * (q.y * q.z + q.w * q.x);
+			float const x = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
+
+			if (glm::abs(x) < FLT_MIN && glm::abs(y) < FLT_MIN)
+				return 2.0f * glm::atan(q.x, q.w);
+
+			return glm::atan(y, x);
+		};
+
+	auto yaw = [](const glm::quat& q)
+		{
+			return glm::asin(glm::clamp(-2.0f * (q.x * q.z - q.w * q.y), -1.0f, 1.0f));
+		};
+
+	auto roll = [](const glm::quat& q)
+		{
+			return glm::atan(2.0f * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
+		};
+
+	return glm::vec3(pitch(quaternion), yaw(quaternion), roll(quaternion));
+}
+#endif
+
 const double PI = 3.14159265358979323846;
 const double rad2degree = 180.0f / PI;
+const double degree2rad = PI / 180.0f;
+void Camera::UpdateViewMatrixAttr(glm::quat& quaternion)
+{
+	if (m_spherical_surface_rotation)
+		// Update the camera's position
+		m_position = rotateVector(m_position, quaternion);
+	// Update the camera's front vector
+	m_front_vec = rotateVector(m_front_vec, quaternion);
+	// Update the camera's up vector
+	m_up_vec = rotateVector(m_up_vec, quaternion);
+}
+
 void Camera::UpdateCameraRotationSphere(const glm::vec3& axis, float angle)
 {
-	// 将轴向量归一化
+	// Normalize the axis vector
 	glm::vec3 unitAxis = glm::normalize(axis);
-	// 创建表示旋转的四元数
-	glm::qua rotationQuaternion = glm::angleAxis(angle, unitAxis);
-	// 将物体的位置转化为四元数形式
-	if (m_facing_origin)
-		m_position = rotateVector(m_position, rotationQuaternion);
-	// 更新相机的朝向向量（假设front向量初始化为(0,0,-1)）
-	m_front_vec = rotateVector(m_front_vec, rotationQuaternion);
-	// 更新相机的上向量，确保它始终与朝向向量垂直
-	m_up_vec = rotateVector(m_up_vec, rotationQuaternion);
-	// 从四元数转欧拉角
+	// Create a quaternion representing the rotation
+	glm::quat rotation_quaternion = glm::angleAxis(angle, unitAxis);
+	UpdateViewMatrixAttr(rotation_quaternion);
+	// Convert quaternion to Euler angles
 #ifdef GLM_ENABLE_EXPERIMENTAL
-	glm::vec3 eulerAngles = glm::eulerAngles(rotationQuaternion);
+	glm::vec3 euler_angles = glm::eulerAngles(rotation_quaternion);
 #else
-#error "Not implement error."
+	glm::vec3 eulerAngles = Quaternion2EulerAngles(rotationQuaternion);
 #endif // !GLM_ENABLE_EXPERIMENTAL
-	// 获取pitch角（绕X轴旋转角度）
-	m_pitch += eulerAngles.x * rad2degree;
-	// 获取yaw角（绕Y轴旋转角度）
-	m_yaw += eulerAngles.y * rad2degree;
-	// 获取roll角（绕Z轴旋转角度）
-	m_roll += eulerAngles.z * rad2degree;
+	// Get the pitch angle (rotation around the X-axis)
+	m_pitch += euler_angles.x * rad2degree;
+	// Get the yaw angle (rotation around the Y-axis)
+	m_yaw += euler_angles.y * rad2degree;
+	// Get the roll angle (rotation around the Z-axis)
+	m_roll += euler_angles.z * rad2degree;
 	limitValueRange(m_yaw, -180.0f, 180.0f);
 	limitValueRange(m_pitch, -180.0f, 180.0f);
 }
@@ -98,7 +105,7 @@ void Camera::translate4(glm::mat4& matrix, float x, float y, float z)
 	m_position.x = matrix[3][0];
 	m_position.y = matrix[3][1];
 	m_position.z = matrix[3][2];
-	m_facing_origin = false;
+	m_spherical_surface_rotation = false;
 	UpdateViewMatrix();
 }
 
@@ -134,12 +141,12 @@ void Camera::RenderController()
 			UpdateViewMatrix();
 		}
 		ImGui::SameLine();
-		if (ImGui::Checkbox("Facing Origin", &m_facing_origin))
+		if (ImGui::Checkbox("Facing Origin", &m_spherical_surface_rotation))
 		{
 			m_front_vec = -m_position;
 			UpdateViewMatrix();
 		}
-		if (!m_facing_origin)
+		if (!m_spherical_surface_rotation)
 		{
 			if (ImGui::SliderFloat3("Front Vector", glm::value_ptr(m_front_vec), -1.0f, 1.0f))
 			{
@@ -148,25 +155,34 @@ void Camera::RenderController()
 		}
 
 		ImGui::PushItemWidth(100.0f);
-		if (ImGui::SliderFloat("Pitch", &m_pitch, -90.0f, 90.0f))
-		{
-			glm::quat quaternion = glm::quat(glm::vec3(m_pitch, m_yaw, m_roll));
-			if (m_facing_origin)
-				m_position = rotateVector(m_position, quaternion);
-			// 更新相机的朝向向量（假设front向量初始化为(0,0,-1)）
-			m_front_vec = rotateVector(m_front_vec, quaternion);
-			// 更新相机的上向量，确保它始终与朝向向量垂直
-			m_up_vec = rotateVector(m_up_vec, quaternion);
-			UpdateViewMatrix();
-		}
+		bool isEulerAngleUpdate = false;
+		auto UpdateEulerAngle = [](float& old_angle, float& diff, const std::string& name) {
+			float new_angle = old_angle;
+			if (ImGui::SliderFloat(name.c_str(), &new_angle, -180.0f, 180.0f))
+			{
+				diff = (new_angle - old_angle) * degree2rad;
+				old_angle = new_angle;
+				return true;
+			}
+			return false;
+			};
+
+		glm::vec3 euler_angle_diff = glm::vec3(0.0f, 0.0f, 0.0f);
+		isEulerAngleUpdate |= UpdateEulerAngle(m_pitch, euler_angle_diff.x, "Pitch");
 		ImGui::SameLine();
-		if (ImGui::SliderFloat("Yaw", &m_yaw, -180.0f, 180.0f));
+		isEulerAngleUpdate |= UpdateEulerAngle(m_yaw, euler_angle_diff.y, "Yaw");
 		ImGui::SameLine();
-		if (ImGui::SliderFloat("Roll", &m_roll, -180.0f, 180.0f));
+		isEulerAngleUpdate |= UpdateEulerAngle(m_roll, euler_angle_diff.z, "Roll");
 		ImGui::SameLine();
 		ImGui::SliderFloat("Rotation Speed", &m_rotation_speed, 1.0f, 5.0f);
 		ImGui::PopItemWidth();
 
+		if (isEulerAngleUpdate)
+		{
+			glm::quat rotation_quaternion = glm::quat(euler_angle_diff);
+			UpdateViewMatrixAttr(rotation_quaternion);
+			UpdateViewMatrix();
+		}
 
 		if (m_camera_projection == PERSPECTIVE && ImGui::SliderFloat("Fov", &m_fov, 15.0f, 150.0f))
 		{

@@ -14,7 +14,6 @@ private:
 	}
 
 	void SetUpTexture(int num = 0) override;
-	void SetUpShader() override;
 	void SetUpData() override;
 };
 RENDERABLE_END
