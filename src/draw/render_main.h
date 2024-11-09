@@ -31,7 +31,7 @@ public:
 		m_glfw_instance->SetKeyCallback(KeyCallback);
 
 		m_camera = Camera::GetInstance();
-		m_camera->SetScreen(SCR_WIDTH, SCR_HEIGHT);
+		m_camera->ProcessFramebufferSizeCallback(SCR_WIDTH, SCR_HEIGHT);
 		m_window = m_glfw_instance->GetWindow();
 		m_render_obj_mgr = RenderObjectManager::GetInstance();
 		m_imgui_mgr = ImGuiManager::GetInstance(m_window);

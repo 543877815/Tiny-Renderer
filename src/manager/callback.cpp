@@ -14,22 +14,35 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 	auto camera = Camera::GetInstance();
-	camera->SetScreen(width, height);
-	camera->UpdatePerspectiveProjectionMatrix();
+	camera->ProcessFramebufferSizeCallback(width, height);
 }
 
 void MouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
+	auto camera = Camera::GetInstance();
+	camera->ProcessMouseCallback(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	auto camera = Camera::GetInstance();
-	camera->ProcessMouseScroll(static_cast<float>(yoffset));
+	camera->ProcessScrollCallback(static_cast<float>(xoffset), static_cast<float>(yoffset));
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
+	auto camera = Camera::GetInstance();
+	if (button == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			camera->ProcessMouseButtonCallback(Camera::MOUSE_BUTTON_RIGHT, Camera::MOUSE_PRESS);
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			camera->ProcessMouseButtonCallback(Camera::MOUSE_BUTTON_RIGHT, Camera::MOUSE_RELEASE);
+		}
+	}
 }
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -51,56 +64,44 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
 	bool shift = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) || glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		if (shift) {
-			camera->ProcessKeyboard(SCREEN_MOVE_BACKWARD, deltaTime);
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_BACKWARD, deltaTime);
 		}
 		else {
-			camera->ProcessKeyboard(SCREEN_MOVE_DOWN, deltaTime);
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_DOWN, deltaTime);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		if (shift) {
-			camera->ProcessKeyboard(SCREEN_MOVE_FORWARD, deltaTime);
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_FORWARD, deltaTime);
 		}
 		else {
-			camera->ProcessKeyboard(SCREEN_MOVE_UP, deltaTime);
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_UP, deltaTime);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		camera->ProcessKeyboard(SCREEN_MOVE_LEFT, deltaTime);
+		camera->ProcessKeyboard(Camera::SCREEN_MOVE_LEFT, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		camera->ProcessKeyboard(SCREEN_MOVE_RIGHT, deltaTime);
+		camera->ProcessKeyboard(Camera::SCREEN_MOVE_RIGHT, deltaTime);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
-		camera->ProcessKeyboard(YAW_UP, deltaTime);
-	}
-	else if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
-		camera->ProcessKeyboard(YAW_DONW, deltaTime);
-	}
-	else if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
-		camera->ProcessKeyboard(PITCH_LEFT, deltaTime);
-	}
-	else if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-		camera->ProcessKeyboard(PITCH_RIGHT, deltaTime);
-	}
-	else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_LEFT, deltaTime);
 	}
 	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_RIGHT, deltaTime);
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_RIGHT, deltaTime);
 	}
 	else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_UP, deltaTime);
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_UP, deltaTime);
 	}
 	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_DOWN, deltaTime);
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_DOWN, deltaTime);
 	}
 	else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_ANTICLOCKWISE, deltaTime);
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_ANTICLOCKWISE, deltaTime);
 	}
 	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-		camera->ProcessKeyboard(CAMERA_ROTATE_CLOCKWISE, deltaTime);
+		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_CLOCKWISE, deltaTime);
 	}
 }
 

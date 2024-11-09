@@ -201,7 +201,7 @@
       <Filter>manager</Filter>
     </ClCompile>
     <ClCompile Include="src\manager\glfw_mgr.cpp">
-      <Filter>main</Filter>
+      <Filter>manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

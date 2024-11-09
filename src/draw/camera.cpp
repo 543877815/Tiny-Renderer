@@ -53,7 +53,7 @@ glm::vec3 Quaternion2EulerAngles(const glm::quat& quaternion)
 const double PI = 3.14159265358979323846;
 const double rad2degree = 180.0f / PI;
 const double degree2rad = PI / 180.0f;
-void Camera::UpdateViewMatrixAttr(glm::quat& quaternion)
+void Camera::UpdateViewMatrix(glm::quat& quaternion)
 {
 	if (m_spherical_surface_rotation)
 		// Update the camera's position
@@ -62,6 +62,8 @@ void Camera::UpdateViewMatrixAttr(glm::quat& quaternion)
 	m_front_vec = rotateVector(m_front_vec, quaternion);
 	// Update the camera's up vector
 	m_up_vec = rotateVector(m_up_vec, quaternion);
+
+	UpdateViewMatrix();
 }
 
 void Camera::UpdateCameraRotationSphere(const glm::vec3& axis, float angle)
@@ -70,7 +72,8 @@ void Camera::UpdateCameraRotationSphere(const glm::vec3& axis, float angle)
 	glm::vec3 unitAxis = glm::normalize(axis);
 	// Create a quaternion representing the rotation
 	glm::quat rotation_quaternion = glm::angleAxis(angle, unitAxis);
-	UpdateViewMatrixAttr(rotation_quaternion);
+	UpdateViewMatrix(rotation_quaternion);
+
 	// Convert quaternion to Euler angles
 #ifdef GLM_ENABLE_EXPERIMENTAL
 	glm::vec3 euler_angles = glm::eulerAngles(rotation_quaternion);
@@ -85,9 +88,10 @@ void Camera::UpdateCameraRotationSphere(const glm::vec3& axis, float angle)
 	m_roll += euler_angles.z * rad2degree;
 	limitValueRange(m_yaw, -180.0f, 180.0f);
 	limitValueRange(m_pitch, -180.0f, 180.0f);
+
 }
 
-void Camera::UpdateCameraVectors() {
+void Camera::InitializeCameraVectors() {
 	// calculate the new Front vector
 	glm::vec3 front;
 	front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
@@ -109,7 +113,7 @@ void Camera::translate4(glm::mat4& matrix, float x, float y, float z)
 	UpdateViewMatrix();
 }
 
-void Camera::ProcessMouseScroll(float yoffset)
+void Camera::ProcessScrollCallback(float xoffset, float yoffset)
 {
 	m_fov -= (float)yoffset;
 	if (m_fov < 1.0f)
@@ -180,8 +184,7 @@ void Camera::RenderController()
 		if (isEulerAngleUpdate)
 		{
 			glm::quat rotation_quaternion = glm::quat(euler_angle_diff);
-			UpdateViewMatrixAttr(rotation_quaternion);
-			UpdateViewMatrix();
+			UpdateViewMatrix(rotation_quaternion);
 		}
 
 		if (m_camera_projection == PERSPECTIVE && ImGui::SliderFloat("Fov", &m_fov, 15.0f, 150.0f))
@@ -224,30 +227,37 @@ void Camera::RenderController()
 		{
 			UpdateOrthogonalProjectionMatrix();
 		}
-
-
 	}
 }
 
-void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
+void Camera::ProcessMouseCallback(float xoffset, float yoffset)
 {
-	xoffset *= m_mouseSensitivity;
-	yoffset *= m_mouseSensitivity;
-
-	m_yaw += xoffset;
-	m_pitch += yoffset;
-
-	// make sure that when pitch is out of bounds, screen doesn't get flipped
-	if (constrainPitch)
+	if (m_mouse_pressed)
 	{
-		if (m_pitch > 89.0f)
-			m_pitch = 89.0f;
-		if (m_pitch < -89.0f)
-			m_pitch = -89.0f;
-	}
+		glm::vec3 euler_angle_diff = glm::vec3(0.0f, 0.0f, 0.0f);
+		euler_angle_diff.y = (m_mouse_last_pos_x - xoffset) / m_screen_width;
+		euler_angle_diff.x = (m_mouse_last_pos_y - yoffset) / m_screen_height;
 
-	// update Front, Right and Up Vectors using the updated Euler angles
-	UpdateCameraVectors();
+		glm::quat rotation_quaternion = glm::quat(euler_angle_diff);
+		UpdateViewMatrix(rotation_quaternion);
+	}
+	m_mouse_last_pos_x = xoffset;
+	m_mouse_last_pos_y = yoffset;
+}
+
+void Camera::ProcessMouseButtonCallback(CameraMouseButton button, CameraMouseAction action, CameraMods mods)
+{
+	if (button == MOUSE_BUTTON_RIGHT)
+	{
+		if (action == MOUSE_PRESS)
+		{
+			m_mouse_pressed = true;
+		}
+		else if (action == MOUSE_RELEASE)
+		{
+			m_mouse_pressed = false;
+		}
+	}
 }
 
 std::shared_ptr<Camera> Camera::GetInstance()
@@ -263,7 +273,7 @@ std::shared_ptr<Camera> Camera::GetInstance()
 
 Camera::Camera(glm::vec3 position, glm::vec3 up_vec)
 {
-	UpdateCameraVectors();
+	InitializeCameraVectors();
 	UpdateViewMatrix();
 	UpdateOrthogonalProjectionMatrix();
 	UpdatePerspectiveProjectionMatrix();
@@ -284,14 +294,15 @@ void Camera::UpdatePerspectiveProjectionMatrix()
 	m_prospectiveProjectionMatrix = glm::perspective(glm::radians(m_fov), m_screen_aspect_rate, m_near, m_far);
 }
 
-void Camera::SetScreen(int width, int height)
+void Camera::ProcessFramebufferSizeCallback(int width, int height)
 {
 	m_screen_height = height;
 	m_screen_width = width;
 	m_screen_aspect_rate = (float)m_screen_width / (float)m_screen_height;
+	UpdatePerspectiveProjectionMatrix();
 }
 
-void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
+void Camera::ProcessKeyboard(CameraKeyboard direction, float deltaTime)
 {
 	glm::mat4 inverseViewMatrix = glm::inverse(m_viewMatrix);
 	if (direction == SCREEN_MOVE_FORWARD)
@@ -326,5 +337,4 @@ void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 			UpdateCameraRotationSphere(axis, -m_rotation_speed * deltaTime);
 	}
 
-	UpdateViewMatrix();
 }
