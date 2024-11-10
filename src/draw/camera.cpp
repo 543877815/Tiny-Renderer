@@ -232,14 +232,14 @@ void Camera::RenderController()
 
 void Camera::ProcessMouseCallback(float xoffset, float yoffset)
 {
+	const static float sensitive = 2.0f;
 	if (m_mouse_pressed)
 	{
-		glm::vec3 euler_angle_diff = glm::vec3(0.0f, 0.0f, 0.0f);
-		euler_angle_diff.y = (m_mouse_last_pos_x - xoffset) / m_screen_width;
-		euler_angle_diff.x = (m_mouse_last_pos_y - yoffset) / m_screen_height;
-
-		glm::quat rotation_quaternion = glm::quat(euler_angle_diff);
-		UpdateViewMatrix(rotation_quaternion);
+		float dx = (m_mouse_last_pos_x - xoffset) / m_screen_width;
+		float dy = (m_mouse_last_pos_y - yoffset) / m_screen_height;
+		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), dx);
+		glm::vec3 axis = glm::normalize(glm::cross(-m_position, m_up_vec));
+		UpdateCameraRotationSphere(axis, dy);
 	}
 	m_mouse_last_pos_x = xoffset;
 	m_mouse_last_pos_y = yoffset;
@@ -329,8 +329,6 @@ void Camera::ProcessKeyboard(CameraKeyboard direction, float deltaTime)
 	else if (direction == CAMERA_ROTATE_UP || direction == CAMERA_ROTATE_DOWN)
 	{
 		glm::vec3 axis = glm::normalize(glm::cross(-m_position, m_up_vec));
-		float upAngle = glm::acos(glm::dot(m_front_vec, m_worldUp_vec) / (glm::length(m_front_vec) * glm::length(m_worldUp_vec)));
-		//float temp = 0.05f;
 		if (direction == CAMERA_ROTATE_UP)
 			UpdateCameraRotationSphere(axis, m_rotation_speed * deltaTime);
 		if (direction == CAMERA_ROTATE_DOWN)

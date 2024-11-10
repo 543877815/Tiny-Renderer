@@ -96,6 +96,8 @@ void MapObj::SetUpGLStatus()
 
 void MapObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
+	SetUpGLStatus();
+
 	auto projection = std::any_cast<glm::mat4>(uniform.at("projection"));
 	auto view = std::any_cast<glm::mat4>(uniform.at("view"));
 	auto model = std::any_cast<glm::mat4>(uniform.at("model"));

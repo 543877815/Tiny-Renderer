@@ -13,6 +13,8 @@ void rotate4(glm::mat4& matrix, float rad, float x, float y, float z)
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	if (width == 0 || height == 0)
+		return;
 	auto camera = Camera::GetInstance();
 	camera->ProcessFramebufferSizeCallback(width, height);
 }
