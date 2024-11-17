@@ -39,7 +39,7 @@ void AABBObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void AABBObj::SetUpData()

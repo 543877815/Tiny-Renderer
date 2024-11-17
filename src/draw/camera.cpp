@@ -50,9 +50,9 @@ glm::vec3 Quaternion2EulerAngles(const glm::quat& quaternion)
 }
 #endif
 
-const double PI = 3.14159265358979323846;
-const double rad2degree = 180.0f / PI;
-const double degree2rad = PI / 180.0f;
+const float PI = 3.14159265358979323846f;
+const float rad2degree = 180.0f / PI;
+const float degree2rad = PI / 180.0f;
 void Camera::UpdateViewMatrix(glm::quat& quaternion)
 {
 	if (m_spherical_surface_rotation)

@@ -3,7 +3,7 @@
 #include "aabb.h"
 
 RENDERABLE_BEGIN
-class AABBObj : public RenderObject<glm::vec3, uint32_t> {
+class AABBObj : public RenderObjectNaive<glm::vec3, uint32_t> {
 public:
 	AABBObj();
 	AABBObj(std::shared_ptr<AABB> aabb);

@@ -1,11 +1,12 @@
 #include "map_obj.h"
 #include <math.h>
 RENDERABLE_BEGIN
-MapObj::MapObj(Parser::RenderObjConfig& config)
+MapObj::MapObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 {
 	SetUpData();
-	SetUpShader(config);
 	SetUpGLStatus();
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 	SetUpTexture(1);
 }
 
@@ -109,7 +110,7 @@ void MapObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	for (auto idx : m_textureIdx) {
 		m_textures->BindTexture(idx);
 	}
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void MapObj::SetUpTexture(int num)
