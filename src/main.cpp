@@ -24,7 +24,7 @@ extern const int SCR_HEIGHT;
 int main() {
 	auto render_main = RenderMain::GetInstance();
 	std::vector<std::string> configs{ "./config/map.json" };
-	render_main->SetRenderObjs(configs);
+	render_main->SetupRenderObjs(configs);
 
 	while (!glfwWindowShouldClose(render_main->GetWindow())) {
 		render_main->PrepareDraw();

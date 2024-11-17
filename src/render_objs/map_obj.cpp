@@ -1,15 +1,16 @@
 #include "map_obj.h"
 #include <math.h>
 RENDERABLE_BEGIN
-MapObj::MapObj(Parser::RenderObjConfig& config)
+MapObj::MapObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 {
 	SetUpData();
-	SetUpShader(config);
 	SetUpGLStatus();
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 	SetUpTexture(1);
 }
 
-#define PI 3.1415926535
+#define PI 3.1415926535f
 void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
 	float lon = uv.x * 180.0f;
 	float lat = uv.y * 90.0f;
@@ -17,8 +18,8 @@ void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
 	float radlon = (lon - 90.0f) * PI / 180.0f;
 	float radlat = lat * PI / 180.0f;
 
-	const double earth_perimeter = 20037508.34f;
-	const double earth_radius = 6378137.0f;
+	const float earth_perimeter = 20037508.34f;
+	const float earth_radius = 6378137.0f;
 
 	xyz.x = cos(radlat) * cos(radlon);
 	xyz.y = sin(radlat);
@@ -49,9 +50,9 @@ void MapObj::SetUpData()
 	std::vector<Point> m_vertices;
 	std::vector<uint32_t> indices;
 
-	for (uint32_t i = 0; i <= m_grid_width; i++)
+	for (uint32_t i = 0; i <= static_cast<uint32_t>(m_grid_width); i++)
 	{
-		for (uint32_t j = 0; j <= m_grid_height; j++)
+		for (uint32_t j = 0; j <= static_cast<uint32_t>(m_grid_height); j++)
 		{
 			Point start{ .x = m_grid_left + i * grid_unit_width,
 						 .y = m_grid_bottom + j * grid_unit_height,
@@ -109,7 +110,7 @@ void MapObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	for (auto idx : m_textureIdx) {
 		m_textures->BindTexture(idx);
 	}
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void MapObj::SetUpTexture(int num)

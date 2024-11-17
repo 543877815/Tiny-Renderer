@@ -12,19 +12,21 @@
 #include <functional>
 #include <memory>
 REGISTER_BEGIN
-using CreateRenderObjFuncPtr = std::function<std::shared_ptr<Renderable::RenderObjectBase>(Parser::RenderObjConfig&)>;
+using ConfigReturnType = std::shared_ptr<Renderable::RenderObjectBase>;
+using ConfigParamType = std::shared_ptr<Parser::RenderObjConfigBase>;
+using CreateRenderObjFuncPtr = std::function<ConfigReturnType(ConfigParamType)>;
 
 class RenderObjectFactory {
 public:
 	static std::unordered_map<std::string, CreateRenderObjFuncPtr>& GetRegisterRenderObj() { return register_obj; };
 
 private:
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateAxis(Parser::RenderObjConfig&);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateBox(Parser::RenderObjConfig&);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateEllipsoid(Parser::RenderObjConfig&);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateSphere(Parser::RenderObjConfig&);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateRectangle2D(Parser::RenderObjConfig&);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreateMap(Parser::RenderObjConfig&);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateAxis(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateBox(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateEllipsoid(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateSphere(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateRectangle2D(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateMap(std::shared_ptr<Parser::RenderObjConfigBase>);
 
 	static std::unordered_map<std::string, CreateRenderObjFuncPtr> register_obj;
 };

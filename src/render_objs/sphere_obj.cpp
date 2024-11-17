@@ -1,10 +1,11 @@
 #include "sphere_obj.h"
 
 RENDERABLE_BEGIN
-SphereObj::SphereObj(Parser::RenderObjConfig& config)
+SphereObj::SphereObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 {
 	SetUpData();
-	SetUpShader();
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 	SetUpAABB();
 }
 
@@ -17,7 +18,7 @@ void SphereObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 
 	if (m_imgui_params.show_aabb) {
 		m_aabb_obj->DrawObj(uniform);
@@ -36,16 +37,11 @@ void SphereObj::ImGuiCallback()
 	if (changed) SetUpData();
 }
 
-void SphereObj::SetUpShader()
-{
-	m_shader = std::make_unique<Shader>("./shader/sphere_vs.glsl", "./shader/sphere_fs.glsl");
-}
-
 void SphereObj::SetUpData()
 {
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::mt19937 generator(seed);
-	auto m_uniform01 = std::uniform_real_distribution<double>(0.0, 1.0);
+	auto m_uniform01 = std::uniform_real_distribution<float>(0.0, 1.0);
 	std::vector<glm::vec3> vertices;
 
 	for (int i = 0; i < m_number; i++) {

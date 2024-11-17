@@ -3,9 +3,9 @@
 #include "aabb.h"
 
 RENDERABLE_BEGIN
-class EllipsoidObj : public RenderObject<glm::vec3, uint32_t> {
+class EllipsoidObj : public RenderObjectNaive<glm::vec3, uint32_t> {
 public:
-	EllipsoidObj(Parser::RenderObjConfig& config);
+	EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
 	std::shared_ptr<AABB> GetAABB();
 
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);

@@ -1,10 +1,10 @@
 #include "register_render_obj.h"
 
 REGISTER_BEGIN
-#define DECLEAR_REGISTER_OBJECT(OBJNAME)																				\
-std::shared_ptr<Renderable::RenderObjectBase> RenderObjectFactory::Create##OBJNAME##(Parser::RenderObjConfig& config)	\
-{																														\
-	return std::make_shared<Renderable::##OBJNAME##Obj>(config);														\
+#define DECLEAR_REGISTER_OBJECT(OBJNAME)																									\
+std::shared_ptr<Renderable::RenderObjectBase> RenderObjectFactory::Create##OBJNAME##(std::shared_ptr<Parser::RenderObjConfigBase> config)	\
+{																																			\
+	return std::make_shared<Renderable::##OBJNAME##Obj>(config);																			\
 }
 
 DECLEAR_REGISTER_OBJECT(Axis);

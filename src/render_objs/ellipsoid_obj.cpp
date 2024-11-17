@@ -1,10 +1,11 @@
 #include "ellipsoid_obj.h"
 
 RENDERABLE_BEGIN
-EllipsoidObj::EllipsoidObj(Parser::RenderObjConfig& config)
+EllipsoidObj::EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 {
 	SetUpData();
-	SetUpShader(config);
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 }
 
 std::shared_ptr<AABB> EllipsoidObj::GetAABB()
@@ -24,7 +25,7 @@ void EllipsoidObj::DrawObj(const std::unordered_map<std::string, std::any>& unif
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void EllipsoidObj::ImGuiCallback()

@@ -50,6 +50,6 @@ uint32_t Texture::GetTexture(size_t idx) {
 }
 
 void Texture::BindTexture(size_t idx) {
-	glActiveTexture(GL_TEXTURE0 + idx);
+	glActiveTexture(GL_TEXTURE0 + static_cast<GLenum>(idx));
 	glBindTexture(GL_TEXTURE_2D, m_textures[idx]);
 }

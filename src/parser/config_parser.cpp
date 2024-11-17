@@ -1,7 +1,9 @@
-#include "config_parser.h"
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
+#include <exception>
+#include <format>
+#include "config_parser.h"
 
 PARSER_BEGIN
 bool GetOFNPath(TCHAR* szFile, bool isSave)
@@ -28,6 +30,16 @@ bool GetOFNPath(TCHAR* szFile, bool isSave)
 	}
 }
 
+class FormatException : public std::exception {
+private:
+	std::string errorMessage;
+public:
+	FormatException(const std::string& message) : errorMessage(message) {}
+	const char* what() const noexcept override {
+		return errorMessage.c_str();
+	}
+};
+
 void LoadCameraConfig()
 {
 	TCHAR szFile[MAX_PATH] = { 0 };
@@ -44,54 +56,96 @@ void LoadCameraConfig()
 	}
 }
 
-void ParseRenderObjConfig(const std::string& path, std::vector<Parser::RenderObjConfig>& obj_configs)
+
+void ConfigParser::Parse(const std::string& path)
 {
 	std::ifstream ifs(path);
+	if (!ifs.is_open())
+		throw std::runtime_error(std::format("Error occured while opening {}", path));
 	std::stringstream buffer;
 	buffer << ifs.rdbuf();
+	ifs.close();
 	rapidjson::Document document;
 	document.Parse(buffer.str().c_str());
 	if (document.HasParseError()) {
-		std::cerr << "JSON parse error: " << document.GetParseError() << std::endl;
-		return;
+		throw std::runtime_error("Document parse error: " + document.GetParseError());
 	}
-
 	if (!document.IsArray()) {
-		std::cerr << "JSON is not an array." << std::endl;
-		return;
+		throw std::runtime_error("Document is not an array.");
 	}
 
-	for (const auto& elem : document.GetArray()) {
-		Parser::RenderObjConfig config;
-		if (!elem.IsObject()) {
-			std::cerr << "Element is not an object." << std::endl;
-			continue;
-		}
+	auto configs = document.GetArray();
+	for (const auto& config : configs)
+	{
+		if (!config.IsObject())
+			throw FormatException("Element of document is not an object.");
 
-		const rapidjson::Value& obj_info = elem;
+		std::string config_type;
+		GetJsonString(config, config_type_key, config_type);
+		rapidjson::Value object_config_value;
+		CheckJsonObject(config, obj_config_key);
+		if (config_type == "naive")
+		{
+			ParseNaiveConfig(config[obj_config_key]);
+		}
+		else if (config_type == "multi")
+		{
 
-		config.obj_type = obj_info["object"].GetString();
-		config.vertex_shader = obj_info["vertex_shader"].GetString();
-		config.fragment_shader = obj_info["fragment_shader"].GetString();
-		if (obj_info.HasMember("projection") && obj_info["projection"].IsString()) {
-			config.projection = obj_info["projection"].GetString();
 		}
-		else {
-			config.projection = "perspective";
+		else
+		{
+			throw std::runtime_error(std::format("The configuration type {} is not implemented yet", config_type));
 		}
-
-		const rapidjson::Value& uniform_info = obj_info["uniform"];
-		if (uniform_info.IsArray()) {
-			for (const auto& uniform : uniform_info.GetArray()) {
-				config.uniform.insert(uniform.GetString());
-			}
-		}
-		else {
-			std::cerr << "Uniform is not an array." << std::endl;
-		}
-
-		obj_configs.emplace_back(config);
 	}
+}
+
+void ConfigParser::ParseNaiveConfig(const rapidjson::Value& obj_config)
+{
+	if (!obj_config.IsObject()) {
+		throw FormatException("Json is not an object.");
+	}
+	RenderObjConfigNaive config;
+
+	GetJsonString(obj_config, renderobj_type_key, config.obj_type);
+	GetJsonString(obj_config, vertex_shader_key, config.vertex_shader);
+	GetJsonString(obj_config, fragment_shader_key, config.fragment_shader);
+	GetJsonString(obj_config, projection_type_key, config.projection);
+	const rapidjson::Value& arr = obj_config[uniform_key];
+	CheckJsonArray(obj_config, uniform_key);
+	for (const auto& elem : arr.GetArray()) {
+		auto uniform = elem.GetString();
+		config.uniforms.insert(uniform);
+	}
+	m_obj_configs.emplace_back(std::make_shared<RenderObjConfigNaive>(config));
+}
+
+void ConfigParser::CheckMemberExist(const rapidjson::Value& json, const char* key)
+{
+	if (!json.HasMember(key))
+		throw FormatException(std::format("Json does not contain a member of {}.", key));
+}
+
+void ConfigParser::CheckJsonObject(const rapidjson::Value& json, const char* key)
+{
+	CheckMemberExist(json, key);
+	if (!json[key].IsObject())
+		throw FormatException(std::format("The value of {} is not an object.", key));
+}
+
+void ConfigParser::GetJsonString(const rapidjson::Value& json, const char* key, std::string& dest)
+{
+	CheckMemberExist(json, key);
+	if (!json[key].IsString())
+		throw FormatException(std::format("The value of {} is not a string.", key));
+	dest = json[key].GetString();
+}
+
+void ConfigParser::CheckJsonArray(const rapidjson::Value& json, const char* key)
+{
+	CheckMemberExist(json, key);
+	const rapidjson::Value& arr = json[key];
+	if (!arr.IsArray())
+		throw FormatException(std::format("The value of {} is not an array.", key));
 }
 
 PARSER_END

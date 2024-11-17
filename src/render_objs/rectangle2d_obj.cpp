@@ -1,17 +1,18 @@
 #include "rectangle2d_obj.h"
 
 RENDERABLE_BEGIN
-Rectangle2DObj::Rectangle2DObj(Parser::RenderObjConfig& config)
+Rectangle2DObj::Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 {
 	SetUpData();
-	SetUpShader(config);
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 	SetUpTexture();
 }
 
 void Rectangle2DObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
 	m_shader->Use();
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void Rectangle2DObj::SetUpGLStatus()

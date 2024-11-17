@@ -27,11 +27,12 @@ RenderMain::RenderMain()
 	m_imgui_mgr = ImGuiManager::GetInstance(m_window);
 }
 
-void RenderMain::SetRenderObjs(std::vector<std::string>& config_paths)
+void RenderMain::SetupRenderObjs(std::vector<std::string>& config_paths)
 {
 	m_render_obj_mgr->InitRenderObjs(config_paths);
 	m_render_objs = m_render_obj_mgr->GetRenderObjs();
 	m_render_obj_configs = m_render_obj_mgr->GetObjConfigs();
+	GatherConfigUniform();
 }
 
 void RenderMain::PrepareDraw()
@@ -52,19 +53,21 @@ void RenderMain::PrepareDraw()
 	//processModelMatrix(m_window, model);
 }
 
-void RenderMain::SetUpUniform(std::unordered_map<std::string, std::any>& uniform, const Parser::RenderObjConfig& config)
+void RenderMain::SetUpDrawUniform(std::unordered_map<std::string, std::any>& draw_uniforms)
 {
-	glm::mat4 model = glm::mat4(1.0f);
-	const glm::mat4& view = m_camera->GetViewMatrix();
-	const glm::mat4& projection = m_camera->GetProjectionMatrix();
-	if (config.uniform.count("projection")) {
-		uniform.emplace("projection", projection);
+	for (const auto& uniform : m_render_obj_uniforms) {
+		if (m_uniform_setter.contains(uniform)) {
+			m_uniform_setter[uniform](draw_uniforms, shared_from_this());
+		}
 	}
-	if (config.uniform.count("view")) {
-		uniform.emplace("view", view);
-	}
-	if (config.uniform.count("model")) {
-		uniform.emplace("model", model);
+}
+
+void RenderMain::GatherConfigUniform()
+{
+	for (const auto& config_ptr : m_render_obj_configs)
+	{
+		auto& config_uniform = config_ptr->GetUniform();
+		m_render_obj_uniforms.insert(config_uniform.begin(), config_uniform.end());
 	}
 }
 
@@ -72,18 +75,13 @@ void RenderMain::Draw()
 {
 	glm::mat4 model = glm::mat4(1.0f);
 
-
 	std::vector<std::function<void()>> functions;
-
+	std::unordered_map<std::string, std::any> draw_uniforms;
+	SetUpDrawUniform(draw_uniforms);
 	for (size_t i = 0; i < m_render_objs.size(); i++) {
 		auto& render_obj = m_render_objs[i];
 		auto& config = m_render_obj_configs[i];
-
-		// Draw Call
-		std::unordered_map<std::string, std::any> uniform;
-		SetUpUniform(uniform, config);
-
-		render_obj->DrawObj(uniform);
+		render_obj->DrawObj(draw_uniforms);
 		// ImGUI Callback
 		auto callback = [&render_obj]() {
 			render_obj->ImGuiCallback();
@@ -99,4 +97,44 @@ void RenderMain::FinishDraw()
 {
 	glfwSwapBuffers(m_window);
 	glfwPollEvents();
+}
+
+void RenderMain::UniformSetter::SetProjectionUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("projection", renderMain->m_camera->GetProjectionMatrix());
+}
+
+void RenderMain::UniformSetter::SetViewUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("view", renderMain->m_camera->GetViewMatrix());
+}
+
+void RenderMain::UniformSetter::SetModelUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("model", glm::mat4(1.0f));
+}
+
+void RenderMain::UniformSetter::SetCamPosUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("cam_pos", renderMain->m_camera->GetPosition());
+}
+
+void RenderMain::UniformSetter::SetViewportUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("viewport", glm::vec2(renderMain->m_camera->GetScreenWidth(), renderMain->m_camera->GetScreenHeight()));
+}
+
+void RenderMain::UniformSetter::SetFocalUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("focal", glm::vec2(renderMain->m_camera->GetFx(), renderMain->m_camera->GetFy()));
+}
+
+void RenderMain::UniformSetter::SetTanFovUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("tan_fov", glm::vec2(renderMain->m_camera->GetWidth() / renderMain->m_camera->GetFx() * 0.5f, renderMain->m_camera->GetHeight() / renderMain->m_camera->GetFy() * 0.5f));
+}
+
+void RenderMain::UniformSetter::SetProjParamsUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
+{
+	uniforms.emplace("projParams", glm::vec2(renderMain->m_camera->GetNear(), renderMain->m_camera->GetFar()));
 }

@@ -2,12 +2,9 @@
 #include "common.h"
 
 RENDERABLE_BEGIN
-class AxisObj : public RenderObject<float, uint32_t> {
+class AxisObj : public RenderObjectNaive<float, uint32_t> {
 public:
-	AxisObj(Parser::RenderObjConfig& config) {
-		SetUpData();
-		SetUpShader(config);
-	}
+	AxisObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
 
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	~AxisObj() = default;
