@@ -51,7 +51,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config\3.1.materials.json">
+    <None Include="config\basic_lighting.json">
       <Filter>config</Filter>
     </None>
     <None Include="config\box.json">
@@ -105,16 +105,16 @@
     <None Include="shader\sphere_vs.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\learningopengl\3.1.light_cube_fs.glsl">
+    <None Include="shader\learningopengl\2.2.basic_lighting.vs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
-    <None Include="shader\learningopengl\3.1.light_cube_vs.glsl">
+    <None Include="shader\learningopengl\2.2.basic_lighting.fs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
-    <None Include="shader\learningopengl\3.1.materials_fs.glsl">
+    <None Include="shader\learningopengl\2.2.light_cube.vs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
-    <None Include="shader\learningopengl\3.1.materials_vs.glsl">
+    <None Include="shader\learningopengl\2.2.light_cube.fs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
   </ItemGroup>
@@ -125,10 +125,7 @@
     <ClCompile Include="src\render_objs\ellipsoid_obj.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
-    <ClCompile Include="src\render_objs\learningopengl_materials.cpp">
-      <Filter>render_objs</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render_objs\map_obj.cpp">
+    <ClCompile Include="src\render_objs\basic_lighting.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
     <ClCompile Include="src\render_objs\rectangle2d_obj.cpp">
@@ -206,12 +203,15 @@
     <ClCompile Include="src\draw\render_main.cpp">
       <Filter>draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\render_objs\map_obj.cpp">
+      <Filter>render_objs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\render_objs\ellipsoid_obj.h">
       <Filter>render_objs</Filter>
     </ClInclude>
-    <ClInclude Include="src\render_objs\learningopengl_materials.h">
+    <ClInclude Include="src\render_objs\basic_lighting.h">
       <Filter>render_objs</Filter>
     </ClInclude>
     <ClInclude Include="src\render_objs\map_obj.h">

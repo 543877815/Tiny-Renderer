@@ -8,12 +8,12 @@ RenderObjectManager::RenderObjectManager()
 	m_register_render_obj = Registry::RenderObjectFactory::GetRegisterRenderObj();
 }
 
-std::vector<Parser::RenderObjConfig>& RenderObjectManager::GetObjConfigs()
+std::vector<std::shared_ptr<Parser::RenderObjConfigBase>>& RenderObjectManager::GetObjConfigs()
 {
 	return m_obj_configs;
 }
 
-Parser::RenderObjConfig& RenderObjectManager::GetObjConfig(size_t idx)
+std::shared_ptr<Parser::RenderObjConfigBase>& RenderObjectManager::GetObjConfig(size_t idx)
 {
 	return m_obj_configs[idx];
 }
@@ -34,12 +34,14 @@ std::shared_ptr<RenderObjectManager> RenderObjectManager::GetInstance()
 }
 
 void RenderObjectManager::InitRenderObjs(std::vector<std::string>& config_paths) {
+	auto parser = Parser::ConfigParser(m_obj_configs);
 	for (auto path : config_paths) {
-		Parser::ParseRenderObjConfig(path, m_obj_configs);
+		parser.Parse(path);
 	}
+
 	for (size_t i = 0; i < m_obj_configs.size(); i++) {
 		auto& obj_config = m_obj_configs[i];
-		auto& obj_type = obj_config.obj_type;
+		std::string& obj_type = obj_config->obj_type;
 		if (m_register_render_obj.count(obj_type)) {
 			m_render_objs.emplace_back(m_register_render_obj[obj_type](obj_config));
 		}

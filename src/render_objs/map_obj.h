@@ -27,10 +27,10 @@ struct Point {
 };
 
 
-class MapObj : public RenderObject<Point, uint32_t> {
+class MapObj : public RenderObjectNaive<Point, uint32_t> {
 
 public:
-	MapObj(Parser::RenderObjConfig& config);
+	MapObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	void ImGuiCallback();
 

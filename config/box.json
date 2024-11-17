@@ -1,14 +1,22 @@
 [
   {
-    "object": "axis",
-    "uniform": [ "projection", "view", "model" ],
-    "vertex_shader": "./shader/axis_vs.glsl",
-    "fragment_shader": "./shader/axis_fs.glsl"
+    "config_type": "naive",
+    "object_info": {
+      "type": "axis",
+      "uniform": [ "projection", "view", "model" ],
+      "vertex_shader": "./shader/axis_vs.glsl",
+      "fragment_shader": "./shader/axis_fs.glsl",
+      "projection": "perspective"
+    }
   },
   {
-    "object": "box",
-    "uniform": [ "projection", "view", "model" ],
-    "vertex_shader": "./shader/box_vs.glsl",
-    "fragment_shader": "./shader/box_fs.glsl"
+    "config_type": "naive",
+    "object_info": {
+      "type": "box",
+      "uniform": [ "projection", "view", "model" ],
+      "vertex_shader": "./shader/box_vs.glsl",
+      "fragment_shader": "./shader/box_fs.glsl",
+      "projection": "perspective"
+    }
   }
 ]

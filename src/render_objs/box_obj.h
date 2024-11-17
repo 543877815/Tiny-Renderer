@@ -3,9 +3,9 @@
 
 // https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/7.4.camera_class/camera_class.cpp
 RENDERABLE_BEGIN
-class BoxObj : public RenderObject<float, uint32_t> {
+class BoxObj : public RenderObjectNaive<float, uint32_t> {
 public:
-	BoxObj(Parser::RenderObjConfig& config);
+	BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:

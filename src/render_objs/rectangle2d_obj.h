@@ -3,9 +3,9 @@
 #include "common.h"
 // https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/2.2.hello_triangle_indexed/hello_triangle_indexed.cpp
 RENDERABLE_BEGIN
-class Rectangle2DObj : public RenderObject<float, uint32_t> {
+class Rectangle2DObj : public RenderObjectNaive<float, uint32_t> {
 public:
-	Rectangle2DObj(Parser::RenderObjConfig& config);
+	Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:

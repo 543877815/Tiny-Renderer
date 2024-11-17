@@ -1,9 +1,12 @@
 [
   {
-    "object": "map",
-    "vertex_shader": "./shader/map_vs.glsl",
-    "fragment_shader": "./shader/map_fs.glsl",
-    "uniform": [ "projection", "view", "model" ],
-    "projection": "orthogonal"
+    "config_type": "naive",
+    "object_info": {
+      "type": "map",
+      "vertex_shader": "./shader/map_vs.glsl",
+      "fragment_shader": "./shader/map_fs.glsl",
+      "uniform": [ "projection", "view", "model" ],
+      "projection": "orthogonal"
+    }
   }
 ]

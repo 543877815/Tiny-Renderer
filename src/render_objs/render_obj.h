@@ -38,11 +38,8 @@ protected:
 };
 
 template<typename vT, typename iT = uint32_t>
-class RenderObject : public RenderObjectBase {
+class RenderObjectNaive : public RenderObjectBase {
 private:
-	uint32_t m_VAO = 0;
-	uint32_t m_VBO = 0;
-	uint32_t m_EBO = 0;
 	GLsizei m_primitive = GL_TRIANGLES;
 	size_t m_vertexCount = 0;
 	uint32_t m_vertexAttrNum = 0;
@@ -52,19 +49,21 @@ private:
 	std::vector<vT> m_vertices;
 	std::vector<iT> m_indices;
 
-
 protected:
+	uint32_t m_VAO = 0;
+	uint32_t m_VBO = 0;
+	uint32_t m_EBO = 0;
 	std::unique_ptr<Shader> m_shader = nullptr;
 	std::unique_ptr<Texture> m_textures = nullptr;
 	std::vector<size_t> m_textureIdx{};
-	virtual void SetUpShader(const Parser::RenderObjConfig& config);
+	virtual void SetUpShader(const std::string& vertex_shader, const std::string& fragment_shader);
 	virtual void SetUpShader() {};
 	virtual void SetUpData() {};
 	virtual void SetUpTexture(int num = 0) {};
 	virtual void DrawObj(const std::unordered_map<std::string, std::any>& uniform) {};
-
-	RenderObject() {}
-	~RenderObject();
+	RenderObjectNaive() {};
+	RenderObjectNaive(Parser::RenderObjConfigNaive& config) {}
+	~RenderObjectNaive();
 
 	void SetLineWidth(float val) { m_lineWidth = val; }
 	void SetPointSize(float val) { m_pointSize = val; }
@@ -81,13 +80,13 @@ protected:
 };
 
 template<typename vT, typename iT>
-inline void RenderObject<vT, iT>::SetUpShader(const Parser::RenderObjConfig& config)
+inline void RenderObjectNaive<vT, iT>::SetUpShader(const std::string& vertex_shader, const std::string& fragment_shader)
 {
-	m_shader = std::make_unique<Shader>(config.vertex_shader.c_str(), config.fragment_shader.c_str());
+	m_shader = std::make_unique<Shader>(vertex_shader.c_str(), fragment_shader.c_str());
 }
 
 template<typename vT, typename iT>
-inline RenderObject<vT, iT>::~RenderObject()
+inline RenderObjectNaive<vT, iT>::~RenderObjectNaive()
 {
 	if (m_VAO > 0)
 	{
@@ -109,7 +108,7 @@ inline RenderObject<vT, iT>::~RenderObject()
 }
 
 template<typename vT, typename iT>
-inline void RenderObject<vT, iT>::SetMesh(std::vector<vT>* vertices, std::vector<VertexInfo>* infos, std::vector<iT>* indices)
+inline void RenderObjectNaive<vT, iT>::SetMesh(std::vector<vT>* vertices, std::vector<VertexInfo>* infos, std::vector<iT>* indices)
 {
 	if ((*vertices).empty()) return;
 
@@ -159,7 +158,7 @@ inline void RenderObject<vT, iT>::SetMesh(std::vector<vT>* vertices, std::vector
 }
 
 template<typename vT, typename iT>
-inline void RenderObject<vT, iT>::Draw()
+inline void RenderObjectNaive<vT, iT>::Draw()
 {
 	if (m_EBO > 0 && m_indices.empty())
 	{
@@ -188,13 +187,14 @@ inline void RenderObject<vT, iT>::Draw()
 
 	if (!m_indices.empty())
 	{
-		glDrawElements(m_primitive, m_indiceCount, GL_UNSIGNED_INT, 0);
+		glDrawElements(m_primitive, static_cast<GLsizei>(m_indiceCount), GL_UNSIGNED_INT, 0);
 	}
 	else
 	{
-		glDrawArrays(m_primitive, 0, m_vertexCount);
+		glDrawArrays(m_primitive, 0, static_cast<GLsizei>(m_vertexCount));
 		glBindVertexArray(0);
 	}
+
 }
 RENDERABLE_END
 

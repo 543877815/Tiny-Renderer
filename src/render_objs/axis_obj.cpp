@@ -2,6 +2,13 @@
 
 
 RENDERABLE_BEGIN
+AxisObj::AxisObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+{
+	SetUpData();
+	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
+	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+}
+
 void AxisObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
 	auto projection = std::any_cast<glm::mat4>(uniform.at("projection"));
@@ -12,7 +19,7 @@ void AxisObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	RenderObject::Draw();
+	RenderObjectNaive::Draw();
 }
 
 void AxisObj::SetUpData()
