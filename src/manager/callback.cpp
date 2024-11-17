@@ -1,4 +1,6 @@
 #include "callback.h"
+#include "../draw/render_main.h"
+#include "../register/register_config_path.h"
 
 void translate4(glm::mat4& matrix, float x, float y, float z)
 {
@@ -53,6 +55,20 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		if (key == GLFW_KEY_ESCAPE) {
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 		}
+		if (action == GLFW_PRESS && mods == GLFW_MOD_CONTROL)
+		{
+			auto instance = RenderMain::GetInstance();
+			if (key == GLFW_KEY_LEFT)
+			{
+				std::vector<std::string> path = Registry::RegisterConfigPath::GetConfigPath(Registry::Operator::PREVIOUS);
+				instance->SetupRenderObjs(path);
+			}
+			if (key == GLFW_KEY_RIGHT)
+			{
+				std::vector<std::string> path = Registry::RegisterConfigPath::GetConfigPath(Registry::Operator::NEXT);
+				instance->SetupRenderObjs(path);
+			}
+		}
 	}
 }
 
@@ -62,47 +78,65 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	// The camera moves on the screen coordinate system..
+	// The camera moves on the screen coordinate system.
 	bool shift = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) || glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		if (shift) {
+	bool ctrl = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL);
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		if (shift)
+		{
 			camera->ProcessKeyboard(Camera::SCREEN_MOVE_BACKWARD, deltaTime);
 		}
-		else {
+		else
+		{
 			camera->ProcessKeyboard(Camera::SCREEN_MOVE_DOWN, deltaTime);
 		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		if (shift) {
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		if (shift)
+		{
 			camera->ProcessKeyboard(Camera::SCREEN_MOVE_FORWARD, deltaTime);
 		}
-		else {
+		else
+		{
 			camera->ProcessKeyboard(Camera::SCREEN_MOVE_UP, deltaTime);
 		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		camera->ProcessKeyboard(Camera::SCREEN_MOVE_LEFT, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		if (!ctrl)
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_LEFT, deltaTime);
 	}
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		camera->ProcessKeyboard(Camera::SCREEN_MOVE_RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		if (!ctrl)
+			camera->ProcessKeyboard(Camera::SCREEN_MOVE_RIGHT, deltaTime);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_LEFT, deltaTime);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_RIGHT, deltaTime);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+	else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_UP, deltaTime);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_DOWN, deltaTime);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+	else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_ANTICLOCKWISE, deltaTime);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
 		camera->ProcessKeyboard(Camera::CAMERA_ROTATE_CLOCKWISE, deltaTime);
 	}
 }

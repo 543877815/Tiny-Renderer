@@ -7,6 +7,7 @@ Rectangle2DObj::Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> base
 	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
 	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
 	SetUpTexture();
+	SetUpGLStatus();
 }
 
 void Rectangle2DObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
@@ -34,8 +35,8 @@ void Rectangle2DObj::SetUpData()
 	};
 
 	std::vector<uint32_t> indices = std::vector<uint32_t>{
-		0, 1, 3,  // first Triangle
-		1, 2, 3   // second Triangle
+		3, 1, 0,  // first Triangle
+		3, 2, 1   // second Triangle
 	};
 
 	SetMesh(&vertices, &vertex_info, &indices);

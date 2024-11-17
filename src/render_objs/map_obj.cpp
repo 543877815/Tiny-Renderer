@@ -83,8 +83,6 @@ void MapObj::SetUpData()
 	};
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
 	SetMesh(&m_vertices, &vertex_info, &indices);
 }
 
@@ -125,7 +123,7 @@ void MapObj::SetUpTexture(int num)
 	m_textureIdx.emplace_back(idx1);
 
 	m_shader->Use();
-	m_shader->SetInt("texture1", idx1);
+	m_shader->SetInt("texture1", static_cast<int>(idx1));
 }
 
 

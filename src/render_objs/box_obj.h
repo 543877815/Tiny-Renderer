@@ -9,10 +9,7 @@ public:
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:
-	void SetUpGLStatus() {
-		glEnable(GL_DEPTH_TEST);
-	}
-
+	void SetUpGLStatus();
 	void SetUpTexture(int num = 0) override;
 	void SetUpData() override;
 };

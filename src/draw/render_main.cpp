@@ -1,4 +1,5 @@
 #include "render_main.h"
+#include "../manager/callback.h"
 
 std::shared_ptr<RenderMain> RenderMain::m_instance = nullptr;
 std::shared_ptr<RenderMain> RenderMain::GetInstance()
@@ -44,7 +45,6 @@ void RenderMain::PrepareDraw()
 	float currentFrame = static_cast<float>(glfwGetTime());
 	m_delta_time = currentFrame - m_last_frame;
 	m_last_frame = currentFrame;
-
 	ProcessInput(m_window, m_delta_time);
 
 	// mvp transform
@@ -64,6 +64,7 @@ void RenderMain::SetUpDrawUniform(std::unordered_map<std::string, std::any>& dra
 
 void RenderMain::GatherConfigUniform()
 {
+	m_render_obj_uniforms.clear();
 	for (const auto& config_ptr : m_render_obj_configs)
 	{
 		auto& config_uniform = config_ptr->GetUniform();

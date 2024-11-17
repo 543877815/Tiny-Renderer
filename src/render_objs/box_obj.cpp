@@ -12,7 +12,6 @@ BoxObj::BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
 void BoxObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
 	SetUpGLStatus();
-	SetUpData();
 
 	auto projection = std::any_cast<glm::mat4>(uniform.at("projection"));
 	auto view = std::any_cast<glm::mat4>(uniform.at("view"));
@@ -26,6 +25,13 @@ void BoxObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 		m_textures->BindTexture(idx);
 	}
 	RenderObjectNaive::Draw();
+}
+
+void BoxObj::SetUpGLStatus()
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 void BoxObj::SetUpTexture(int num)
@@ -49,12 +55,12 @@ void BoxObj::SetUpData()
 	};
 
 	std::vector<float>vertices = std::vector<float>{
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
 
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
@@ -70,12 +76,12 @@ void BoxObj::SetUpData()
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
 		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
@@ -84,12 +90,12 @@ void BoxObj::SetUpData()
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 	};
 
 	SetMesh(&vertices, &vertex_info);

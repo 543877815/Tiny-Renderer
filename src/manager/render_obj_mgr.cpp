@@ -33,7 +33,9 @@ std::shared_ptr<RenderObjectManager> RenderObjectManager::GetInstance()
 	return m_instance;
 }
 
-void RenderObjectManager::InitRenderObjs(std::vector<std::string>& config_paths) {
+void RenderObjectManager::InitRenderObjs(std::vector<std::string>& config_paths)
+{
+	ResetRenderObjs();
 	auto parser = Parser::ConfigParser(m_obj_configs);
 	for (auto path : config_paths) {
 		parser.Parse(path);
@@ -49,5 +51,11 @@ void RenderObjectManager::InitRenderObjs(std::vector<std::string>& config_paths)
 			std::cerr << std::format("Error occur: the object: {} is not regisered yet.", obj_type) << std::endl;
 		}
 	}
+}
+
+void RenderObjectManager::ResetRenderObjs()
+{
+	m_render_objs.clear();
+	m_obj_configs.clear();
 }
 
