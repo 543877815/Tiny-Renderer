@@ -1,2 +1,6 @@
 ﻿.vs
 x64
+*.obj
+*.pth
+*.ply
+*.splat
