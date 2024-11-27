@@ -43,7 +43,7 @@ void RenderObjectManager::InitRenderObjs(std::vector<std::string>& config_paths)
 
 	for (size_t i = 0; i < m_obj_configs.size(); i++) {
 		auto& obj_config = m_obj_configs[i];
-		std::string& obj_type = obj_config->obj_type;
+		std::string& obj_type = obj_config->objType;
 		if (m_register_render_obj.count(obj_type)) {
 			m_render_objs.emplace_back(m_register_render_obj[obj_type](obj_config));
 		}

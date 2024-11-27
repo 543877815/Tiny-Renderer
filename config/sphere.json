@@ -1,6 +1,6 @@
 [
   {
-    "config_type": "naive",
+    "config_type": "simple",
     "object_info": {
       "type": "axis",
       "vertex_shader": "./shader/axis_vs.glsl",
@@ -10,7 +10,7 @@
     }
   },
   {
-    "config_type": "naive",
+    "config_type": "simple",
     "object_info": {
       "type": "sphere",
       "vertex_shader": "./shader/sphere_vs.glsl",

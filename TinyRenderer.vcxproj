@@ -141,6 +141,8 @@
     <None Include="config\map.json" />
     <None Include="config\rectangle2d.json" />
     <None Include="config\sphere.json" />
+    <None Include="config\ply.json" />
+    <None Include="config\splat.json" />
     <None Include="shader\aabb_fs.glsl" />
     <None Include="shader\aabb_vs.glsl" />
     <None Include="shader\axis_fs.glsl" />
@@ -153,10 +155,14 @@
     <None Include="shader\learningopengl\2.2.light_cube.fs.glsl" />
     <None Include="shader\map_fs.glsl" />
     <None Include="shader\map_vs.glsl" />
+    <None Include="shader\ply_fs.glsl" />
+    <None Include="shader\ply_vs.glsl" />
     <None Include="shader\rect_fs.glsl" />
     <None Include="shader\rect_vs.glsl" />
     <None Include="shader\sphere_fs.glsl" />
     <None Include="shader\sphere_vs.glsl" />
+    <None Include="shader\splat_fs.glsl" />
+    <None Include="shader\splat_vs.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\imgui\imgui.cpp" />
@@ -180,6 +186,8 @@
     <ClCompile Include="src\parser\config_parser.cpp" />
     <ClCompile Include="src\register\register_config_path.cpp" />
     <ClCompile Include="src\register\register_render_obj.cpp" />
+    <ClCompile Include="src\register\register_uniform_setter.cpp" />
+    <ClCompile Include="src\register\register_vbo.cpp" />
     <ClCompile Include="src\render_objs\aabb_obj.cpp" />
     <ClCompile Include="src\render_objs\axis_obj.cpp" />
     <ClCompile Include="src\render_objs\box_obj.cpp" />
@@ -188,6 +196,7 @@
     <ClCompile Include="src\render_objs\map_obj.cpp" />
     <ClCompile Include="src\render_objs\rectangle2d_obj.cpp" />
     <ClCompile Include="src\render_objs\sphere_obj.cpp" />
+    <ClCompile Include="src\render_objs\ply_obj.cpp" />
     <ClCompile Include="thirdparty\glad.c" />
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +216,9 @@
     <ClInclude Include="src\register\common.h" />
     <ClInclude Include="src\register\register_config_path.h" />
     <ClInclude Include="src\register\register_render_obj.h" />
+    <ClInclude Include="src\register\register_uniform_setter.h" />
+    <ClInclude Include="src\register\register_vbo.h" />
+    <ClInclude Include="src\register\register_vertex_info.h" />
     <ClInclude Include="src\render_objs\aabb.h" />
     <ClInclude Include="src\render_objs\aabb_obj.h" />
     <ClInclude Include="src\render_objs\axis_obj.h" />
@@ -218,6 +230,7 @@
     <ClInclude Include="src\render_objs\rectangle2d_obj.h" />
     <ClInclude Include="src\render_objs\render_obj.h" />
     <ClInclude Include="src\render_objs\sphere_obj.h" />
+    <ClInclude Include="src\render_objs\ply_obj.h" />
     <ClInclude Include="src\threadpool\threadpool.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>

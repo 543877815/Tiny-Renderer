@@ -5,12 +5,15 @@
 RENDERABLE_BEGIN
 class BoxObj : public RenderObjectNaive<float, uint32_t> {
 public:
-	BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
+	BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:
 	void SetUpGLStatus();
 	void SetUpTexture(int num = 0) override;
 	void SetUpData() override;
+
+private:
+	std::vector<size_t> m_textureIdxes{};
 };
 RENDERABLE_END

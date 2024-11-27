@@ -13,14 +13,16 @@ DECLEAR_REGISTER_OBJECT(Box);
 DECLEAR_REGISTER_OBJECT(Rectangle2D);
 DECLEAR_REGISTER_OBJECT(Ellipsoid);
 DECLEAR_REGISTER_OBJECT(Map);
+DECLEAR_REGISTER_OBJECT(Ply);
 
-std::unordered_map<std::string, CreateRenderObjFuncPtr> RenderObjectFactory::register_obj = {
+std::unordered_map<std::string, CreateRenderObjFuncPtr> RenderObjectFactory::registerObj = {
 		{"axis", CreateAxis},
 		{"sphere", CreateSphere},
 		{"box", CreateBox},
 		{"rectangle2d", CreateRectangle2D},
 		{"ellipsoid", CreateEllipsoid},
-		{"map", CreateMap}
+		{"map", CreateMap},
+		{"ply", CreatePly},
 };
 
 REGISTER_END

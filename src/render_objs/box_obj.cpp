@@ -1,11 +1,11 @@
 #include "box_obj.h"
 
 RENDERABLE_BEGIN
-BoxObj::BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+BoxObj::BoxObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 	SetUpTexture(2);
 }
 
@@ -21,7 +21,7 @@ void BoxObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	for (auto idx : m_textureIdx) {
+	for (auto idx : m_textureIdxes) {
 		m_textures->BindTexture(idx);
 	}
 	RenderObjectNaive::Draw();
@@ -38,9 +38,9 @@ void BoxObj::SetUpTexture(int num)
 {
 	m_textures = std::make_unique<Texture>(num);
 	size_t idx1 = m_textures->GenerateTexture("./textures/awesomeface.png");
-	m_textureIdx.emplace_back(idx1);
+	m_textureIdxes.emplace_back(idx1);
 	size_t idx2 = m_textures->GenerateTexture("./textures/container.jpg");
-	m_textureIdx.emplace_back(idx2);
+	m_textureIdxes.emplace_back(idx2);
 
 	m_shader->Use();
 	m_shader->SetInt("texture1", idx1);
@@ -49,7 +49,7 @@ void BoxObj::SetUpTexture(int num)
 
 void BoxObj::SetUpData()
 {
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 5, 0},
 		{"aTexCoord", 1, 2, GL_FLOAT, GL_FALSE, 5, 3}
 	};
@@ -98,6 +98,6 @@ void BoxObj::SetUpData()
 		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 	};
 
-	SetMesh(&vertices, &vertex_info);
+	SetMesh(&vertices, &vertexInfo);
 }
 RENDERABLE_END

@@ -80,43 +80,67 @@ void ConfigParser::Parse(const std::string& path)
 		if (!config.IsObject())
 			throw FormatException("Element of document is not an object.");
 
-		std::string config_type;
-		GetJsonString(config, config_type_key, config_type);
-		rapidjson::Value object_config_value;
-		CheckJsonObject(config, obj_config_key);
-		if (config_type == "naive")
+		std::string configType;
+		GetJsonString(config, configTypeKey, configType);
+		rapidjson::Value objectConfigValue;
+		CheckJsonObject(config, objConfigKey);
+		if (configType == "simple")
 		{
-			ParseNaiveConfig(config[obj_config_key]);
+			ParseSimpleConfig(config[objConfigKey]);
 		}
-		else if (config_type == "multi")
+		else if (configType == "3dgs")
+		{
+			Parse3DGSConfig(config[objConfigKey]);
+		}
+		else if (configType == "advanced")
 		{
 
 		}
 		else
 		{
-			throw std::runtime_error(std::format("The configuration type {} is not implemented yet", config_type));
+			throw std::runtime_error(std::format("The configuration type {} is not implemented yet", configType));
 		}
 	}
 }
 
-void ConfigParser::ParseNaiveConfig(const rapidjson::Value& obj_config)
+void ConfigParser::ParseSimpleConfig(const rapidjson::Value& objConfig)
 {
-	if (!obj_config.IsObject()) {
+	if (!objConfig.IsObject()) {
 		throw FormatException("Json is not an object.");
 	}
-	RenderObjConfigNaive config;
+	RenderObjConfigSimple config;
 
-	GetJsonString(obj_config, renderobj_type_key, config.obj_type);
-	GetJsonString(obj_config, vertex_shader_key, config.vertex_shader);
-	GetJsonString(obj_config, fragment_shader_key, config.fragment_shader);
-	GetJsonString(obj_config, projection_type_key, config.projection);
-	const rapidjson::Value& arr = obj_config[uniform_key];
-	CheckJsonArray(obj_config, uniform_key);
+	GetJsonString(objConfig, renderObjTypeKey, config.objType);
+	GetJsonString(objConfig, vertexShaderKey, config.vertexShader);
+	GetJsonString(objConfig, fragmentShaderKey, config.fragmentShader);
+	GetJsonString(objConfig, projectionTypeKey, config.projection);
+	const rapidjson::Value& arr = objConfig[uniformKey];
+	CheckJsonArray(objConfig, uniformKey);
 	for (const auto& elem : arr.GetArray()) {
 		auto uniform = elem.GetString();
 		config.uniforms.insert(uniform);
 	}
-	m_obj_configs.emplace_back(std::make_shared<RenderObjConfigNaive>(config));
+	m_objConfigs.emplace_back(std::make_shared<RenderObjConfigSimple>(config));
+}
+
+void ConfigParser::Parse3DGSConfig(const rapidjson::Value& objConfig)
+{
+	if (!objConfig.IsObject()) {
+		throw FormatException("Json is not an object.");
+	}
+	RenderObjConfig3DGS config;
+
+	GetJsonString(objConfig, renderObjTypeKey, config.objType);
+	GetJsonString(objConfig, vertexShaderKey, config.vertexShader);
+	GetJsonString(objConfig, fragmentShaderKey, config.fragmentShader);
+	GetJsonString(objConfig, modelPathKey, config.modelPath);
+	const rapidjson::Value& arr = objConfig[uniformKey];
+	CheckJsonArray(objConfig, uniformKey);
+	for (const auto& elem : arr.GetArray()) {
+		auto uniform = elem.GetString();
+		config.uniforms.insert(uniform);
+	}
+	m_objConfigs.emplace_back(std::make_shared<RenderObjConfig3DGS>(config));
 }
 
 void ConfigParser::CheckMemberExist(const rapidjson::Value& json, const char* key)

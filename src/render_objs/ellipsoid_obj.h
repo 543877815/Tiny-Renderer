@@ -5,7 +5,7 @@
 RENDERABLE_BEGIN
 class EllipsoidObj : public RenderObjectNaive<glm::vec3, uint32_t> {
 public:
-	EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
+	EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	std::shared_ptr<AABB> GetAABB();
 
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
@@ -19,9 +19,9 @@ private:
 	int m_number = 10000;
 	glm::vec3 m_scale{ 0.3f, 0.7f, 1.0f };
 	glm::vec4 m_rotation{ 0.0f, 0.0f, 0.0f, 0.0f };
-	std::shared_ptr<AABB> m_aabb_obj = nullptr;
+	std::shared_ptr<AABB> m_aabbObj = nullptr;
 	struct ImguiParams {
-		bool show_aabb = true;
-	} m_imgui_params;
+		bool showAABB = true;
+	} m_imguiParams;
 };
 RENDERABLE_END

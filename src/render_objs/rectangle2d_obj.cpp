@@ -1,11 +1,11 @@
 #include "rectangle2d_obj.h"
 
 RENDERABLE_BEGIN
-Rectangle2DObj::Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+Rectangle2DObj::Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 	SetUpTexture();
 	SetUpGLStatus();
 }
@@ -23,7 +23,7 @@ void Rectangle2DObj::SetUpGLStatus()
 
 void Rectangle2DObj::SetUpData()
 {
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 3, 0}
 	};
 
@@ -39,7 +39,7 @@ void Rectangle2DObj::SetUpData()
 		3, 2, 1   // second Triangle
 	};
 
-	SetMesh(&vertices, &vertex_info, &indices);
+	SetMesh(&vertices, &vertexInfo, &indices);
 }
 
 

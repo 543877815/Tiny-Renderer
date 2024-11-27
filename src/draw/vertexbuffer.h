@@ -8,9 +8,9 @@
 #include <memory>
 #include <stdint.h>
 #include <vector>
-
+#include <glad/glad.h>
 class VertexArrayObject;
-class BufferObject
+class VertexBufferObject
 {
 	friend class VertexArrayObject;
 public:
@@ -23,13 +23,13 @@ public:
 	// flags can one of the following bitfields.
 	//     GL_DYNAMIC_STORAGE_BIT, GL_MAP_READ_BIT, GL_MAP_WRITE_BIT, GL_MAP_PERSISTENT_BIT
 	//     GL_MAP_COHERENT_BIT, GL_CLIENT_STORAGE_BIT
-	BufferObject(int targetIn, const std::vector<float>& data, unsigned int flags = 0);
-	BufferObject(int targetIn, const std::vector<glm::vec2>& data, unsigned int flags = 0);
-	BufferObject(int targetIn, const std::vector<glm::vec3>& data, unsigned int flags = 0);
-	BufferObject(int targetIn, const std::vector<glm::vec4>& data, unsigned int flags = 0);
-	BufferObject(int targetIn, const std::vector<uint32_t>& data, unsigned int flags = 0);
-	BufferObject(const BufferObject& orig) = delete;
-	~BufferObject();
+	VertexBufferObject(int targetIn, const std::vector<float>& data, unsigned int flags = 0);
+	VertexBufferObject(int targetIn, const std::vector<glm::vec2>& data, unsigned int flags = 0);
+	VertexBufferObject(int targetIn, const std::vector<glm::vec3>& data, unsigned int flags = 0);
+	VertexBufferObject(int targetIn, const std::vector<glm::vec4>& data, unsigned int flags = 0);
+	VertexBufferObject(int targetIn, const std::vector<uint32_t>& data, unsigned int flags = 0);
+	VertexBufferObject(const VertexBufferObject& orig) = delete;
+	~VertexBufferObject();
 
 	void Bind() const;
 	void Unbind() const;
@@ -39,14 +39,16 @@ public:
 	void Update(const std::vector<glm::vec3>& data);
 	void Update(const std::vector<glm::vec4>& data);
 	void Update(const std::vector<uint32_t>& data);
-
 	void Read(std::vector<uint32_t>& data);
-
 	uint32_t GetObj() const { return obj; }
-
+	void SetOffset(int _offset) { offset = _offset; }
 protected:
 	int target;
-	uint32_t obj;
+	uint32_t obj = 0;
+	GLenum type = GL_FLOAT;
+	GLboolean normalized = GL_FALSE;
+	GLsizei stride = 0;
+	int offset = 0;
 	int elementSize;  // vec2 = 2, vec3 = 3 etc.
 	int numElements;  // number of vec2, vec3 in buffer
 };
@@ -60,13 +62,13 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
-	void SetAttribBuffer(int loc, std::shared_ptr<BufferObject> attribBufferIn);
-	void SetElementBuffer(std::shared_ptr<BufferObject> elementBufferIn);
-	std::shared_ptr<BufferObject> GetElementBuffer() const { return elementBuffer; }
+	void SetAttribBuffer(int loc, std::shared_ptr<VertexBufferObject> attribBufferIn);
+	void SetElementBuffer(std::shared_ptr<VertexBufferObject> elementBufferIn);
+	std::shared_ptr<VertexBufferObject> GetElementBuffer() const { return elementBuffer; }
 	void DrawElements(int mode) const;
 
 protected:
 	uint32_t obj;
-	std::vector<std::shared_ptr<BufferObject>> attribBufferVec;
-	std::shared_ptr<BufferObject> elementBuffer;
+	std::vector<std::shared_ptr<VertexBufferObject>> attribBufferVec;
+	std::shared_ptr<VertexBufferObject> elementBuffer;
 };

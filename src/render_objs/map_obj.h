@@ -30,7 +30,7 @@ struct Point {
 class MapObj : public RenderObjectNaive<Point, uint32_t> {
 
 public:
-	MapObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
+	MapObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	void ImGuiCallback();
 
@@ -41,15 +41,19 @@ private:
 	void UV2XYZ(const Point& point, Point& xyz);
 
 private:
-	float m_grid_left = -1.0;
-	float m_grid_right = 1.0;
-	float m_grid_bottom = -1.0;
-	float m_grid_top = 1.0;
-	int m_grid_width = 50;
-	int m_grid_height = 50;
+	float m_gridLeft = -1.0;
+	float m_gridRight = 1.0;
+	float m_gridBottom = -1.0;
+	float m_gridTop = 1.0;
+	int m_gridWidth = 50;
+	int m_gridHeight = 50;
 	float m_transform_scale = 0.0;
-
-	std::unordered_map<GLsizei, std::string> m_primitive_name{
+	std::vector<VertexInfo> m_vertexInfo = std::vector<VertexInfo>{
+		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 1, 0},
+		{"aColor", 1, 3, GL_FLOAT, GL_FALSE, 1, 3},
+		{"aTexCoord", 2, 2, GL_FLOAT, GL_FALSE, 1, 6}
+	};
+	std::unordered_map<GLsizei, std::string> m_primitiveName{
 		{GL_POINTS, "points"},
 		{GL_TRIANGLES, "triangles"}
 	};

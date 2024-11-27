@@ -15,10 +15,10 @@
 RENDERABLE_BEGIN
 struct VertexInfo {
 	VertexInfo(const char* name, uint32_t location, uint32_t count, uint32_t type, bool normalized, uint32_t offset, uint32_t stride) :
-		attriName(std::string(name)), attriLocation(location), count(count), type(type), normalized(normalized), offset(offset), stride(stride) {}
+		attribute_name(std::string(name)), attributeLocation(location), count(count), type(type), normalized(normalized), offset(offset), stride(stride) {}
 
-	std::string attriName = "";
-	uint32_t attriLocation = 0;
+	std::string attribute_name = "";
+	uint32_t attributeLocation = 0;
 	uint32_t count = 0;
 	uint32_t type = 0;
 	bool normalized = false;
@@ -42,7 +42,7 @@ class RenderObjectNaive : public RenderObjectBase {
 private:
 	GLsizei m_primitive = GL_TRIANGLES;
 	size_t m_vertexCount = 0;
-	uint32_t m_vertexAttrNum = 0;
+	uint32_t m_vertexAttributeNum = 0;
 	size_t m_indiceCount = 0;
 	float m_lineWidth = 0.0f;
 	float m_pointSize = 0.0f;
@@ -55,14 +55,14 @@ protected:
 	uint32_t m_EBO = 0;
 	std::unique_ptr<Shader> m_shader = nullptr;
 	std::unique_ptr<Texture> m_textures = nullptr;
-	std::vector<size_t> m_textureIdx{};
+	std::vector<size_t> m_textureIdxes{};
 	virtual void SetUpShader(const std::string& vertex_shader, const std::string& fragment_shader);
 	virtual void SetUpShader() {};
 	virtual void SetUpData() {};
 	virtual void SetUpTexture(int num = 0) {};
 	virtual void DrawObj(const std::unordered_map<std::string, std::any>& uniform) {};
 	RenderObjectNaive() {};
-	RenderObjectNaive(Parser::RenderObjConfigNaive& config) {}
+	RenderObjectNaive(Parser::RenderObjConfigSimple& config) {}
 	~RenderObjectNaive();
 
 	void SetLineWidth(float val) { m_lineWidth = val; }
@@ -74,15 +74,15 @@ protected:
 	uint32_t GetVAO() { return m_VAO; }
 	uint32_t GetVBO() { return m_VBO; }
 	uint32_t GetEBO() { return m_EBO; }
-	void SetMesh(std::vector<vT>* vertices = nullptr, std::vector<VertexInfo>* infos = nullptr, std::vector<iT>* indices = nullptr);
+	void SetMesh(std::vector<vT>* vertices = nullptr, std::vector<VertexInfo>* vertexInfos = nullptr, std::vector<iT>* indices = nullptr);
 	void Draw();
 
 };
 
 template<typename vT, typename iT>
-inline void RenderObjectNaive<vT, iT>::SetUpShader(const std::string& vertex_shader, const std::string& fragment_shader)
+inline void RenderObjectNaive<vT, iT>::SetUpShader(const std::string& vertexShader, const std::string& fragmentShader)
 {
-	m_shader = std::make_unique<Shader>(vertex_shader.c_str(), fragment_shader.c_str());
+	m_shader = std::make_unique<Shader>(vertexShader.c_str(), fragmentShader.c_str());
 }
 
 template<typename vT, typename iT>
@@ -108,13 +108,13 @@ inline RenderObjectNaive<vT, iT>::~RenderObjectNaive()
 }
 
 template<typename vT, typename iT>
-inline void RenderObjectNaive<vT, iT>::SetMesh(std::vector<vT>* vertices, std::vector<VertexInfo>* infos, std::vector<iT>* indices)
+inline void RenderObjectNaive<vT, iT>::SetMesh(std::vector<vT>* vertices, std::vector<VertexInfo>* vertexInfos, std::vector<iT>* indices)
 {
 	if ((*vertices).empty()) return;
 
 	m_vertices = *vertices;
-	m_vertexAttrNum = (*infos)[0].offset;
-	m_vertexCount = m_vertices.size() / m_vertexAttrNum;
+	m_vertexAttributeNum = (*vertexInfos)[0].offset;
+	m_vertexCount = m_vertices.size() / m_vertexAttributeNum;
 
 	if (indices) {
 		m_indices = *indices;
@@ -147,10 +147,10 @@ inline void RenderObjectNaive<vT, iT>::SetMesh(std::vector<vT>* vertices, std::v
 	}
 
 
-	for (auto info : *infos)
+	for (auto info : *vertexInfos)
 	{
-		glVertexAttribPointer(info.attriLocation, info.count, info.type, info.normalized, info.offset * sizeof(vT), (void*)(info.stride * sizeof(info.type)));
-		glEnableVertexAttribArray(info.attriLocation);
+		glVertexAttribPointer(info.attributeLocation, info.count, info.type, info.normalized, info.offset * sizeof(vT), (void*)(info.stride * sizeof(info.type)));
+		glEnableVertexAttribArray(info.attributeLocation);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -7,16 +7,9 @@ Texture::Texture(size_t tex_num) {
 	std::fill(m_textures.begin(), m_textures.end(), 0);
 }
 
-size_t Texture::GenerateTexture(const std::string&path) {
-	size_t idx = 0;
-	for (size_t i = 0; i < m_textures.size(); i++) {
-		if (m_textures[i] == 0) {
-			idx = i;
-			break;
-		}
-	}
-	glGenTextures(1, &m_textures[idx]);
-	glBindTexture(GL_TEXTURE_2D, m_textures[idx]);
+size_t Texture::GenerateTexture(const std::string& path) {
+	glGenTextures(1, &m_textures[m_idx]);
+	glBindTexture(GL_TEXTURE_2D, m_textures[m_idx]);
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -42,7 +35,19 @@ size_t Texture::GenerateTexture(const std::string&path) {
 		std::cout << "Failed to load texture" << std::endl;
 	}
 	stbi_image_free(data);
-	return idx;
+	return m_idx++;
+}
+
+size_t Texture::GenerateTexture(int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data)
+{
+	glGenTextures(1, &m_textures[m_idx]);
+	glBindTexture(GL_TEXTURE_2D, m_textures[m_idx]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterTypeToGL[static_cast<int>(params.minFilter)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterTypeToGL[static_cast<int>(params.magFilter)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapTypeToGL[static_cast<int>(params.sWrap)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTypeToGL[static_cast<int>(params.tWrap)]);
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, data_type, data);
+	return m_idx++;
 }
 
 uint32_t Texture::GetTexture(size_t idx) {

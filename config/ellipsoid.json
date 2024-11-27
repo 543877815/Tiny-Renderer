@@ -1,6 +1,6 @@
 [
   {
-    "config_type": "naive",
+    "config_type": "simple",
     "object_info": {
       "type": "axis",
       "uniform": [ "projection", "view", "model" ],
@@ -10,7 +10,7 @@
     }
   },
   {
-    "config_type": "naive",
+    "config_type": "simple",
     "object_info": {
       "type": "ellipsoid",
       "uniform": [ "projection", "view", "model" ],

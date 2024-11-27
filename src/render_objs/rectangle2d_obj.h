@@ -5,7 +5,7 @@
 RENDERABLE_BEGIN
 class Rectangle2DObj : public RenderObjectNaive<float, uint32_t> {
 public:
-	Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
+	Rectangle2DObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:

@@ -69,10 +69,6 @@ public:
 	float GetRight() const { return m_right; }
 	float GetTop() const { return m_top; }
 	float GetBottom() const { return m_bottom; }
-	float GetFx() const { return m_fx; }
-	float GetFy() const { return m_fy; }
-	float GetWidth() const { return m_width; }
-	float GetHeight() const { return m_height; }
 	int GetScreenWidth()const { return m_screen_width; }
 	int GetScreenHeight()const { return m_screen_height; }
 	CameraProjection GetCameraProjection() const { return m_camera_projection; }
@@ -112,11 +108,11 @@ private:
 	float m_rotation_speed = 2.0f;
 	float m_transition_speed = 2.0f;
 	float m_movementSpeed = 2.5f;
-	float m_mouseSensitivity = 0.1f;;
+	float m_mouseSensitivity = 0.1f;
 	// projection relative
 	float m_fov = 45.0f;
 	float m_near = 0.1f;
-	float m_far = 100.0f;
+	float m_far = 1000.0f;
 	float m_left = -1.2f;
 	float m_right = 1.2f;
 	float m_bottom = -1.2f;
@@ -130,11 +126,7 @@ private:
 	int m_screen_width = 800;
 	int m_screen_height = 600;
 	float m_screen_aspect_rate = (float)m_screen_width / (float)m_screen_height;
-	// 3dgs
-	float m_fy = 1164.660128748450f;  // focal_y
-	float m_fx = 1159.5880733038064f; // focal_x 
-	float m_width = 1959.0f;
-	float m_height = 1090.0f;
+
 	// camera matrix
 	glm::mat4 m_viewMatrix;
 	glm::mat4 m_prospectiveProjectionMatrix;

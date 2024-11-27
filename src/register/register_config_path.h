@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 REGISTER_BEGIN
-enum Operator
+enum Operator : uint32_t
 {
 	NEXT,
 	PREVIOUS,
@@ -17,8 +17,9 @@ public:
 	static std::vector<std::string> GetConfigPath(Operator op);
 
 private:
-	static inline int m_current_idx = 0;
-	static inline std::vector<std::string> m_config_paths{
+	static inline int m_currentIdx = 0;
+	static inline std::vector<std::string> m_configPaths{
+		"./config/ply.json",
 		"./config/box.json",
 		"./config/ellipsoid.json",
 		"./config/map.json",

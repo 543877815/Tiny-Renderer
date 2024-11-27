@@ -27,7 +27,7 @@ RENDERABLE_BEGIN
 class SphereObj : public RenderObjectNaive<glm::vec3, uint32_t> {
 
 public:
-	SphereObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr);
+	SphereObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	virtual void ImGuiCallback();
 	~SphereObj() = default;
@@ -39,11 +39,11 @@ private:
 private:
 	int m_number = 10000;
 	float m_radius = 1.0;
-	std::shared_ptr<AABBObj> m_aabb_obj = nullptr;
+	std::shared_ptr<AABBObj> m_aabbObj = nullptr;
 
 	struct ImguiParams {
-		bool show_aabb = true;
-	} m_imgui_params;
+		bool showAABB = true;
+	} m_imguiParams;
 
 };
 

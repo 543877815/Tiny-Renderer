@@ -1,12 +1,12 @@
 #include "map_obj.h"
 #include <math.h>
 RENDERABLE_BEGIN
-MapObj::MapObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+MapObj::MapObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
 	SetUpGLStatus();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 	SetUpTexture(1);
 }
 
@@ -15,22 +15,22 @@ void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
 	float lon = uv.x * 180.0f;
 	float lat = uv.y * 90.0f;
 
-	float radlon = (lon - 90.0f) * PI / 180.0f;
-	float radlat = lat * PI / 180.0f;
+	float radLon = (lon - 90.0f) * PI / 180.0f;
+	float radLat = lat * PI / 180.0f;
 
-	const float earth_perimeter = 20037508.34f;
-	const float earth_radius = 6378137.0f;
+	const float earthPerimeter = 20037508.34f;
+	const float earthRadius = 6378137.0f;
 
-	xyz.x = cos(radlat) * cos(radlon);
-	xyz.y = sin(radlat);
-	xyz.z = cos(radlat) * sin(radlon);
+	xyz.x = cos(radLat) * cos(radLon);
+	xyz.y = sin(radLat);
+	xyz.z = cos(radLat) * sin(radLon);
 
 	if (abs(lat) < 85) {
-		float WebMercatorX = earth_radius * radlon;
-		float WebMercatorY = earth_radius * log(tan((PI / 4.0f) + (radlat / 2.0f)));
+		float WebMercatorX = earthRadius * radLon;
+		float WebMercatorY = earthRadius * log(tan((PI / 4.0f) + (radLat / 2.0f)));
 
-		xyz.u = (WebMercatorX / earth_perimeter + 1.0f) / 2.0f;
-		xyz.v = (WebMercatorY / earth_perimeter + 1.0f) / 2.0f;
+		xyz.u = (WebMercatorX / earthPerimeter + 1.0f) / 2.0f;
+		xyz.v = (WebMercatorY / earthPerimeter + 1.0f) / 2.0f;
 	}
 	else {
 		xyz.u = uv.u;
@@ -41,49 +41,43 @@ void MapObj::UV2XYZ(const Point& uv, Point& xyz) {
 
 void MapObj::SetUpData()
 {
-	uint32_t num_vertices_per_row = m_grid_width + 1;
-	float grid_unit_width = (m_grid_right - m_grid_left) / m_grid_width;
-	float grid_unit_height = (m_grid_top - m_grid_bottom) / m_grid_height;
-	float uv_unit_width = 1.0f / m_grid_width;
-	float uv_unit_height = 1.0f / m_grid_height;
+	uint32_t numVerticesPerRow = m_gridWidth + 1;
+	float gridUnitWidth = (m_gridRight - m_gridLeft) / m_gridWidth;
+	float gridUnitHeight = (m_gridTop - m_gridBottom) / m_gridHeight;
+	float uvUnitWidth = 1.0f / m_gridWidth;
+	float uvUnitHeight = 1.0f / m_gridHeight;
 
 	std::vector<Point> m_vertices;
 	std::vector<uint32_t> indices;
 
-	for (uint32_t i = 0; i <= static_cast<uint32_t>(m_grid_width); i++)
+	for (uint32_t i = 0; i <= static_cast<uint32_t>(m_gridWidth); i++)
 	{
-		for (uint32_t j = 0; j <= static_cast<uint32_t>(m_grid_height); j++)
+		for (uint32_t j = 0; j <= static_cast<uint32_t>(m_gridHeight); j++)
 		{
-			Point start{ .x = m_grid_left + i * grid_unit_width,
-						 .y = m_grid_bottom + j * grid_unit_height,
-						 .u = uv_unit_width * i,
-						 .v = uv_unit_height * j };
+			Point start{ .x = m_gridLeft + i * gridUnitWidth,
+						 .y = m_gridBottom + j * gridUnitHeight,
+						 .u = uvUnitWidth * i,
+						 .v = uvUnitHeight * j };
 
 			Point end;
 			UV2XYZ(start, end);
 
 			m_vertices.emplace_back(start * (1 - m_transform_scale) + end * m_transform_scale);
 
-			if (i != m_grid_width && j != m_grid_height) {
-				indices.emplace_back(i + j * num_vertices_per_row);
-				indices.emplace_back(i + 1 + (j + 1) * num_vertices_per_row);
-				indices.emplace_back(i + 1 + j * num_vertices_per_row);
+			if (i != m_gridWidth && j != m_gridHeight) {
+				indices.emplace_back(i + j * numVerticesPerRow);
+				indices.emplace_back(i + 1 + (j + 1) * numVerticesPerRow);
+				indices.emplace_back(i + 1 + j * numVerticesPerRow);
 
-				indices.emplace_back(i + (j + 1) * num_vertices_per_row);
-				indices.emplace_back(i + 1 + (j + 1) * num_vertices_per_row);
-				indices.emplace_back(i + j * num_vertices_per_row);
+				indices.emplace_back(i + (j + 1) * numVerticesPerRow);
+				indices.emplace_back(i + 1 + (j + 1) * numVerticesPerRow);
+				indices.emplace_back(i + j * numVerticesPerRow);
 			}
 		}
 	}
 
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
-		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 1, 0},
-		{"aColor", 1, 3, GL_FLOAT, GL_FALSE, 1, 3},
-		{"aTexCoord", 2, 2, GL_FLOAT, GL_FALSE, 1, 6}
-	};
-
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	SetMesh(&m_vertices, &vertex_info, &indices);
+	SetMesh(&m_vertices, &m_vertexInfo, &indices);
 }
 
 void MapObj::SetUpGLStatus()
@@ -105,7 +99,7 @@ void MapObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
-	for (auto idx : m_textureIdx) {
+	for (auto idx : m_textureIdxes) {
 		m_textures->BindTexture(idx);
 	}
 	RenderObjectNaive::Draw();
@@ -120,7 +114,7 @@ void MapObj::SetUpTexture(int num)
 
 	m_textures = std::make_unique<Texture>(num);
 	size_t idx1 = m_textures->GenerateTexture("D:/jupyter_notebook/cg_practise/httplib/output/0/0/0.png");
-	m_textureIdx.emplace_back(idx1);
+	m_textureIdxes.emplace_back(idx1);
 
 	m_shader->Use();
 	m_shader->SetInt("texture1", static_cast<int>(idx1));
@@ -149,12 +143,12 @@ void MapObj::ImGuiCallback()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	is_change |= ImGui::SliderInt("grid_width", &m_grid_width, 2, 50);
-	is_change |= ImGui::SliderInt("grid_height", &m_grid_height, 2, 50);
-	is_change |= ImGui::SliderFloat("grid_left", &m_grid_left, -1.0f, 0.0f);
-	is_change |= ImGui::SliderFloat("grid_bottom", &m_grid_bottom, -1.0f, 0.0f);
-	is_change |= ImGui::SliderFloat("grid_right", &m_grid_right, 0.0f, 1.0f);
-	is_change |= ImGui::SliderFloat("grid_top", &m_grid_top, 0.0f, 1.0f);
+	is_change |= ImGui::SliderInt("grid_width", &m_gridWidth, 2, 50);
+	is_change |= ImGui::SliderInt("grid_height", &m_gridHeight, 2, 50);
+	is_change |= ImGui::SliderFloat("grid_left", &m_gridLeft, -1.0f, 0.0f);
+	is_change |= ImGui::SliderFloat("grid_bottom", &m_gridBottom, -1.0f, 0.0f);
+	is_change |= ImGui::SliderFloat("grid_right", &m_gridRight, 0.0f, 1.0f);
+	is_change |= ImGui::SliderFloat("grid_top", &m_gridTop, 0.0f, 1.0f);
 	is_change |= ImGui::SliderFloat("transform_scale", &m_transform_scale, 0.0f, 1.0f);
 	if (is_change) SetUpData();
 }

@@ -1,5 +1,7 @@
 #include "render_main.h"
 #include "../manager/callback.h"
+#include "../render_objs/ply_obj.h"
+#include "../register/register_uniform_setter.h"
 
 std::shared_ptr<RenderMain> RenderMain::m_instance = nullptr;
 std::shared_ptr<RenderMain> RenderMain::GetInstance()
@@ -14,37 +16,38 @@ std::shared_ptr<RenderMain> RenderMain::GetInstance()
 
 RenderMain::RenderMain()
 {
-	m_glfw_instance = GLFWManager::GetInstance(SCR_WIDTH, SCR_HEIGHT);
-	m_glfw_instance->SetFrameBufferSizeCallback(FramebufferSizeCallback);
-	m_glfw_instance->SetMouseButtonCallback(MouseButtonCallback);
-	m_glfw_instance->SetMouseCallback(MouseCallback);
-	m_glfw_instance->SetScrollCallback(ScrollCallback);
-	m_glfw_instance->SetKeyCallback(KeyCallback);
+	m_glfwInstance = GLFWManager::GetInstance(SCR_WIDTH, SCR_HEIGHT);
+	m_glfwInstance->SetFrameBufferSizeCallback(FramebufferSizeCallback);
+	m_glfwInstance->SetMouseButtonCallback(MouseButtonCallback);
+	m_glfwInstance->SetMouseCallback(MouseCallback);
+	m_glfwInstance->SetScrollCallback(ScrollCallback);
+	m_glfwInstance->SetKeyCallback(KeyCallback);
 
 	m_camera = Camera::GetInstance();
 	m_camera->ProcessFramebufferSizeCallback(SCR_WIDTH, SCR_HEIGHT);
-	m_window = m_glfw_instance->GetWindow();
-	m_render_obj_mgr = RenderObjectManager::GetInstance();
-	m_imgui_mgr = ImGuiManager::GetInstance(m_window);
+	m_window = m_glfwInstance->GetWindow();
+	m_renderObjMgr = RenderObjectManager::GetInstance();
+	m_imguiMgr = ImGuiManager::GetInstance(m_window);
+	m_uniformSetter = std::make_unique<Registry::UniformSetter>();
 }
 
-void RenderMain::SetupRenderObjs(std::vector<std::string>& config_paths)
+void RenderMain::SetupRenderObjs(std::vector<std::string>& configPaths)
 {
-	m_render_obj_mgr->InitRenderObjs(config_paths);
-	m_render_objs = m_render_obj_mgr->GetRenderObjs();
-	m_render_obj_configs = m_render_obj_mgr->GetObjConfigs();
+	m_renderObjMgr->InitRenderObjs(configPaths);
+	m_renderObjs = m_renderObjMgr->GetRenderObjs();
+	m_renderObjConfigs = m_renderObjMgr->GetObjConfigs();
 	GatherConfigUniform();
 }
 
 void RenderMain::PrepareDraw()
 {
-	float* clear_color = m_imgui_mgr->GetClearColor();
+	float* clearColor = m_imguiMgr->GetClearColor();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+	glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 
 	float currentFrame = static_cast<float>(glfwGetTime());
-	m_delta_time = currentFrame - m_last_frame;
-	m_last_frame = currentFrame;
+	m_delta_time = currentFrame - m_lastFrame;
+	m_lastFrame = currentFrame;
 	ProcessInput(m_window, m_delta_time);
 
 	// mvp transform
@@ -53,22 +56,23 @@ void RenderMain::PrepareDraw()
 	//processModelMatrix(m_window, model);
 }
 
-void RenderMain::SetUpDrawUniform(std::unordered_map<std::string, std::any>& draw_uniforms)
+void RenderMain::SetUpDrawUniform(std::unordered_map<std::string, std::any>& drawUniforms)
 {
-	for (const auto& uniform : m_render_obj_uniforms) {
-		if (m_uniform_setter.contains(uniform)) {
-			m_uniform_setter[uniform](draw_uniforms, shared_from_this());
+
+	for (const auto& uniform : m_renderObjUniforms) {
+		if (m_uniformSetter->Contain(uniform)) {
+			m_uniformSetter->GetFunc(uniform)(drawUniforms);
 		}
 	}
 }
 
 void RenderMain::GatherConfigUniform()
 {
-	m_render_obj_uniforms.clear();
-	for (const auto& config_ptr : m_render_obj_configs)
+	m_renderObjUniforms.clear();
+	for (const auto& ConfigPtr : m_renderObjConfigs)
 	{
-		auto& config_uniform = config_ptr->GetUniform();
-		m_render_obj_uniforms.insert(config_uniform.begin(), config_uniform.end());
+		auto& configUniform = ConfigPtr->GetUniform();
+		m_renderObjUniforms.insert(configUniform.begin(), configUniform.end());
 	}
 }
 
@@ -77,20 +81,20 @@ void RenderMain::Draw()
 	glm::mat4 model = glm::mat4(1.0f);
 
 	std::vector<std::function<void()>> functions;
-	std::unordered_map<std::string, std::any> draw_uniforms;
-	SetUpDrawUniform(draw_uniforms);
-	for (size_t i = 0; i < m_render_objs.size(); i++) {
-		auto& render_obj = m_render_objs[i];
-		auto& config = m_render_obj_configs[i];
-		render_obj->DrawObj(draw_uniforms);
+	std::unordered_map<std::string, std::any> drawUniforms;
+	SetUpDrawUniform(drawUniforms);
+	for (size_t i = 0; i < m_renderObjs.size(); i++) {
+		auto& renderObj = m_renderObjs[i];
+		auto& config = m_renderObjConfigs[i];
+		renderObj->DrawObj(drawUniforms);
 		// ImGUI Callback
-		auto callback = [&render_obj]() {
-			render_obj->ImGuiCallback();
+		auto callback = [&renderObj]() {
+			renderObj->ImGuiCallback();
 			};
 		functions.emplace_back(callback);
 	}
 
-	m_imgui_mgr->Render(functions);
+	m_imguiMgr->Render(functions);
 
 }
 
@@ -100,42 +104,4 @@ void RenderMain::FinishDraw()
 	glfwPollEvents();
 }
 
-void RenderMain::UniformSetter::SetProjectionUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("projection", renderMain->m_camera->GetProjectionMatrix());
-}
 
-void RenderMain::UniformSetter::SetViewUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("view", renderMain->m_camera->GetViewMatrix());
-}
-
-void RenderMain::UniformSetter::SetModelUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("model", glm::mat4(1.0f));
-}
-
-void RenderMain::UniformSetter::SetCamPosUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("cam_pos", renderMain->m_camera->GetPosition());
-}
-
-void RenderMain::UniformSetter::SetViewportUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("viewport", glm::vec2(renderMain->m_camera->GetScreenWidth(), renderMain->m_camera->GetScreenHeight()));
-}
-
-void RenderMain::UniformSetter::SetFocalUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("focal", glm::vec2(renderMain->m_camera->GetFx(), renderMain->m_camera->GetFy()));
-}
-
-void RenderMain::UniformSetter::SetTanFovUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("tan_fov", glm::vec2(renderMain->m_camera->GetWidth() / renderMain->m_camera->GetFx() * 0.5f, renderMain->m_camera->GetHeight() / renderMain->m_camera->GetFy() * 0.5f));
-}
-
-void RenderMain::UniformSetter::SetProjParamsUniform(std::unordered_map<std::string, std::any>& uniforms, std::shared_ptr<RenderMain> renderMain)
-{
-	uniforms.emplace("projParams", glm::vec2(renderMain->m_camera->GetNear(), renderMain->m_camera->GetFar()));
-}

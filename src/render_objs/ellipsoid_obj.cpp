@@ -1,16 +1,16 @@
 #include "ellipsoid_obj.h"
 
 RENDERABLE_BEGIN
-EllipsoidObj::EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+EllipsoidObj::EllipsoidObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 }
 
 std::shared_ptr<AABB> EllipsoidObj::GetAABB()
 {
-	return m_aabb_obj;
+	return m_aabbObj;
 }
 
 void EllipsoidObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
@@ -43,7 +43,7 @@ void EllipsoidObj::SetUpData()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::normal_distribution<> d(0.0, 1.0);
-	m_aabb_obj = std::make_shared<AABB>();
+	m_aabbObj = std::make_shared<AABB>();
 
 	std::vector<float> M{
 		1.0f - 2.0f * (m_rotation[2] * m_rotation[2] + m_rotation[3] * m_rotation[3]),
@@ -114,7 +114,7 @@ void EllipsoidObj::SetUpData()
 		vertices[i] = glm::vec3(y[0] * radius[0], y[1] * radius[1], y[2] * radius[2]);
 	}
 
-	m_aabb_obj->reset();
+	m_aabbObj->reset();
 	glm::vec3 center1(0.0f, 0.0f, 0.0f);
 	glm::vec3 offsetPoint;
 	for (int i = 0; i < 3; i++) {
@@ -122,16 +122,16 @@ void EllipsoidObj::SetUpData()
 		glm::vec3 displacement = sqrt_eigenvalue * vector[i];
 		for (int j = -1; j <= 1; j += 2) {
 			offsetPoint = center1 + static_cast<float>(j) * displacement;
-			m_aabb_obj->expand({ offsetPoint[0], offsetPoint[1], offsetPoint[2] });
+			m_aabbObj->expand({ offsetPoint[0], offsetPoint[1], offsetPoint[2] });
 		}
 	}
 
 
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 1, 0},
 	};
 
-	SetMesh(&vertices, &vertex_info);
+	SetMesh(&vertices, &vertexInfo);
 	SetPrimitive(GL_POINTS);
 }
 

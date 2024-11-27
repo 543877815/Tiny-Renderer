@@ -44,7 +44,7 @@ void AABBObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 
 void AABBObj::SetUpData()
 {
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 1, 0}
 	};
 
@@ -63,7 +63,7 @@ void AABBObj::SetUpData()
 		5,1
 	};
 
-	SetMesh(&m_vertices, &vertex_info, &indices);
+	SetMesh(&m_vertices, &vertexInfo, &indices);
 	SetPrimitive(GL_LINES);
 }
 RENDERABLE_END

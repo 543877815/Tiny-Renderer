@@ -2,11 +2,11 @@
 
 
 RENDERABLE_BEGIN
-AxisObj::AxisObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+AxisObj::AxisObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 }
 
 void AxisObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
@@ -24,7 +24,7 @@ void AxisObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 
 void AxisObj::SetUpData()
 {
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 6, 0},
 		{"aColor", 1, 3, GL_FLOAT, GL_FALSE, 6, 3}
 	};
@@ -44,7 +44,7 @@ void AxisObj::SetUpData()
 		4, 5
 	};
 
-	SetMesh(&vertices, &vertex_info, &indices);
+	SetMesh(&vertices, &vertexInfo, &indices);
 	SetPrimitive(GL_LINES);
 }
 RENDERABLE_END

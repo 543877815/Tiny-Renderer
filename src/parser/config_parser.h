@@ -16,27 +16,34 @@
 
 PARSER_BEGIN
 struct RenderObjConfigBase {
-	std::string obj_type;
-	virtual std::unordered_set<std::string>& GetUniform() = 0;
-};
-
-struct RenderObjConfigNaive : public RenderObjConfigBase
-{
-	std::string type = "naive";
-	std::string vertex_shader;
-	std::string fragment_shader;
-	std::string model_path;
+	std::string objType;
 	std::unordered_set<std::string> uniforms;
-	std::string projection = "perspective";
-	virtual std::unordered_set<std::string>& GetUniform() { return uniforms; };
+	std::unordered_set<std::string>& GetUniform() { return uniforms; };
 };
 
-struct RenderObjConfigMulti : public RenderObjConfigBase
+struct RenderObjConfigSimple : public RenderObjConfigBase
+{
+	std::string type = "simple";
+	std::string vertexShader = "";
+	std::string fragmentShader = "";
+	std::string projection = "perspective";
+};
+
+struct RenderObjConfig3DGS : public RenderObjConfigBase
+{
+	std::string type = "3dgs";
+	std::string vertexShader = "";
+	std::string fragmentShader = "";
+	std::string modelPath = "";
+	std::string projection = "perspective";
+};
+
+struct RenderObjConfigAdvanced : public RenderObjConfigBase
 {
 	struct Drawing {
-		std::string vertex_shader;
-		std::string fragment_shader;
-		std::string model_path;
+		std::string vertexShader;
+		std::string fragmentShader;
+		std::string modelPath;
 		std::unordered_set<std::string> uniform;
 		std::string projection = "perspective";
 	};
@@ -47,27 +54,29 @@ struct RenderObjConfigMulti : public RenderObjConfigBase
 
 };
 
-static const char* config_type_key = "config_type";
-static const char* obj_config_key = "object_info";
-static const char* renderobj_type_key = "type";
-static const char* vertex_shader_key = "vertex_shader";
-static const char* fragment_shader_key = "fragment_shader";
-static const char* projection_type_key = "projection";
-static const char* uniform_key = "uniform";
+static const char* configTypeKey = "config_type";
+static const char* objConfigKey = "object_info";
+static const char* renderObjTypeKey = "type";
+static const char* vertexShaderKey = "vertex_shader";
+static const char* fragmentShaderKey = "fragmentShader";
+static const char* projectionTypeKey = "projection";
+static const char* modelPathKey = "model_path";
+static const char* uniformKey = "uniform";
 
 class ConfigParser {
 public:
-	ConfigParser(std::vector<std::shared_ptr<RenderObjConfigBase>>& source) : m_obj_configs(source) {};
+	ConfigParser(std::vector<std::shared_ptr<RenderObjConfigBase>>& source) : m_objConfigs(source) {};
 	void Parse(const std::string& path);
 private:
-	void ParseNaiveConfig(const rapidjson::Value& obj_config);
+	void ParseSimpleConfig(const rapidjson::Value& objConfig);
+	void Parse3DGSConfig(const rapidjson::Value& objConfig);
 	void CheckMemberExist(const rapidjson::Value& json, const char* key);
 	void GetJsonString(const rapidjson::Value& json, const char* key, std::string& dest);
 	void CheckJsonObject(const rapidjson::Value& json, const char* key);
 	void CheckJsonArray(const rapidjson::Value& json, const char* key);
 
 private:
-	std::vector<std::shared_ptr<RenderObjConfigBase>>& m_obj_configs;
+	std::vector<std::shared_ptr<RenderObjConfigBase>>& m_objConfigs;
 };
 
 bool GetOFNPath(TCHAR* szFile, bool isSave);

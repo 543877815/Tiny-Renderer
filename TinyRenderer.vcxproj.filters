@@ -117,6 +117,24 @@
     <None Include="shader\learningopengl\2.2.light_cube.fs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
+    <None Include="shader\ply_fs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\ply_vs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\splat_fs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\splat_vs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="config\ply.json">
+      <Filter>config</Filter>
+    </None>
+    <None Include="config\splat.json">
+      <Filter>config</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -203,8 +221,14 @@
     <ClCompile Include="src\draw\render_main.cpp">
       <Filter>draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\render_objs\ply_obj.cpp">
+      <Filter>render_objs</Filter>
+    </ClCompile>
     <ClCompile Include="src\render_objs\map_obj.cpp">
       <Filter>render_objs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\register\register_vbo.cpp">
+      <Filter>register</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -291,6 +315,12 @@
     </ClInclude>
     <ClInclude Include="src\parser\common.h">
       <Filter>parser</Filter>
+    </ClInclude>
+    <ClInclude Include="src\register\register_vbo.h">
+      <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_objs\ply_obj.h">
+      <Filter>render_objs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

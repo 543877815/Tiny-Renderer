@@ -7,6 +7,7 @@
 #include "../render_objs/sphere_obj.h"
 #include "../render_objs/rectangle2d_obj.h"
 #include "../render_objs/map_obj.h"
+#include "../render_objs/ply_obj.h"
 #include "../parser/config_parser.h"
 #include "./common.h"
 #include <functional>
@@ -18,7 +19,7 @@ using CreateRenderObjFuncPtr = std::function<ConfigReturnType(ConfigParamType)>;
 
 class RenderObjectFactory {
 public:
-	static std::unordered_map<std::string, CreateRenderObjFuncPtr>& GetRegisterRenderObj() { return register_obj; };
+	static std::unordered_map<std::string, CreateRenderObjFuncPtr>& GetRegisterRenderObj() { return registerObj; };
 
 private:
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateAxis(std::shared_ptr<Parser::RenderObjConfigBase>);
@@ -27,8 +28,9 @@ private:
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateSphere(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateRectangle2D(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateMap(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreatePly(std::shared_ptr<Parser::RenderObjConfigBase>);
 
-	static std::unordered_map<std::string, CreateRenderObjFuncPtr> register_obj;
+	static std::unordered_map<std::string, CreateRenderObjFuncPtr> registerObj;
 };
 
 

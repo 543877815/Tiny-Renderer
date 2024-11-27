@@ -1,11 +1,11 @@
 #include "sphere_obj.h"
 
 RENDERABLE_BEGIN
-SphereObj::SphereObj(std::shared_ptr<Parser::RenderObjConfigBase> base_config_ptr)
+SphereObj::SphereObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	SetUpData();
-	auto config_ptr = std::static_pointer_cast<Parser::RenderObjConfigNaive>(base_config_ptr);
-	SetUpShader(config_ptr->vertex_shader, config_ptr->fragment_shader);
+	auto ConfigPtr = std::static_pointer_cast<Parser::RenderObjConfigSimple>(baseConfigPtr);
+	SetUpShader(ConfigPtr->vertexShader, ConfigPtr->fragmentShader);
 	SetUpAABB();
 }
 
@@ -20,8 +20,8 @@ void SphereObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform
 	m_shader->SetMat4("model", model);
 	RenderObjectNaive::Draw();
 
-	if (m_imgui_params.show_aabb) {
-		m_aabb_obj->DrawObj(uniform);
+	if (m_imguiParams.showAABB) {
+		m_aabbObj->DrawObj(uniform);
 	}
 }
 
@@ -33,7 +33,7 @@ void SphereObj::ImGuiCallback()
 		SetUpAABB();
 	}
 
-	ImGui::Checkbox("show aabb", &m_imgui_params.show_aabb);
+	ImGui::Checkbox("show aabb", &m_imguiParams.showAABB);
 	if (changed) SetUpData();
 }
 
@@ -53,20 +53,20 @@ void SphereObj::SetUpData()
 		vertices.emplace_back(glm::vec3(x, y, z));
 	}
 
-	std::vector<VertexInfo> vertex_info = std::vector<VertexInfo>{
+	std::vector<VertexInfo> vertexInfo = std::vector<VertexInfo>{
 		{"aPos", 0, 3, GL_FLOAT, GL_FALSE, 1, 0},
 	};
 
-	SetMesh(&vertices, &vertex_info);
+	SetMesh(&vertices, &vertexInfo);
 	SetPrimitive(GL_POINTS);
 }
 
 void SphereObj::SetUpAABB()
 {
-	if (!m_aabb_obj) m_aabb_obj = std::make_shared<AABBObj>();
-	m_aabb_obj->GetAABB()->reset();
-	m_aabb_obj->GetAABB()->expand({ m_radius, m_radius, m_radius });
-	m_aabb_obj->GetAABB()->expand({ -m_radius, -m_radius, -m_radius });
+	if (!m_aabbObj) m_aabbObj = std::make_shared<AABBObj>();
+	m_aabbObj->GetAABB()->reset();
+	m_aabbObj->GetAABB()->expand({ m_radius, m_radius, m_radius });
+	m_aabbObj->GetAABB()->expand({ -m_radius, -m_radius, -m_radius });
 }
 
 RENDERABLE_END

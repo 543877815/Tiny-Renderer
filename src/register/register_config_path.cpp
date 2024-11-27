@@ -7,24 +7,24 @@ std::vector<std::string> RegisterConfigPath::GetConfigPath(const std::vector<siz
 	std::vector<std::string> ret;
 	for (auto idx : indices)
 	{
-		ret.emplace_back(m_config_paths[idx]);
+		ret.emplace_back(m_configPaths[idx]);
 	}
 	return ret;
 }
 
 std::vector<std::string> RegisterConfigPath::GetConfigPath(Operator op)
 {
-	auto size = m_config_paths.size();
+	auto size = m_configPaths.size();
 	if (op == NEXT)
 	{
-		m_current_idx = (m_current_idx + 1) % size;
+		m_currentIdx = (m_currentIdx + 1) % size;
 	}
 	else if (op == PREVIOUS)
 	{
-		m_current_idx = (m_current_idx - 1 + size) % size;
+		m_currentIdx = (m_currentIdx - 1 + size) % size;
 	}
-	std::cout << m_current_idx << std::endl;
-	return { m_config_paths[m_current_idx] };
+	std::cout << m_currentIdx << std::endl;
+	return { m_configPaths[m_currentIdx] };
 }
 
 REGISTER_END
