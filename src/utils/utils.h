@@ -2,6 +2,14 @@
 #include <iostream>
 #include <format>
 #include <string>
+#ifndef NDEBUG
+#define GL_ERROR_CHECK(x) GLErrorCheck(x)
+void GLErrorCheck(const char* message);
+#else
+#define GL_ERROR_CHECK(x)
+#endif
+
+
 class DataView {
 	const char* m_data;
 	size_t m_size;
@@ -37,12 +45,10 @@ std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits
 	return out;
 }
 
-void limitValueRange(float& value, float lowerLimit, float upperLimit) {
-	float range = upperLimit - lowerLimit;
-	while (value > upperLimit) {
-		value -= range;
-	}
-	while (value < lowerLimit) {
-		value += range;
-	}
-}
+void limitValueRange(float& value, float lowerLimit, float upperLimit);
+#ifndef NDEBUG
+// If there is a glError this outputs it along with a message to stderr.
+// otherwise there is no output.
+void GLErrorCheck(const char* message);
+
+#endif

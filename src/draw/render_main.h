@@ -21,10 +21,9 @@ public:
 	void PrepareDraw();
 	void Draw();
 	void FinishDraw();
+	void SetUpDrawUniform();
 
 private:
-
-	void SetUpDrawUniform(std::unordered_map<std::string, std::any>& drawUniforms);
 	void GatherConfigUniform();
 
 private:
@@ -34,11 +33,11 @@ private:
 	std::shared_ptr<ImGuiManager> m_imguiMgr = nullptr;
 	std::unique_ptr<Registry::UniformSetter> m_uniformSetter = nullptr;
 	GLFWwindow* m_window = nullptr;
-	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> m_renderObjs;
-	std::vector<std::shared_ptr<Parser::RenderObjConfigBase>> m_renderObjConfigs;
-	std::unordered_set<std::string> m_renderObjUniforms;
+	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> m_renderObjs{};
+	std::vector<std::shared_ptr<Parser::RenderObjConfigBase>> m_renderObjConfigs{};
+	std::unordered_set<std::string> m_renderObjUniforms{};
+	std::unordered_map<std::string, std::any> m_drawUniforms{};
 	static std::shared_ptr<RenderMain> m_instance;
 	float m_lastFrame = 0.0;
 	float m_delta_time = 0.0;
-
 };

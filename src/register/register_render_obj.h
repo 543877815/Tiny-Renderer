@@ -7,7 +7,7 @@
 #include "../render_objs/sphere_obj.h"
 #include "../render_objs/rectangle2d_obj.h"
 #include "../render_objs/map_obj.h"
-#include "../render_objs/ply_obj.h"
+#include "../render_objs/gs_ply_obj.h"
 #include "../parser/config_parser.h"
 #include "./common.h"
 #include <functional>

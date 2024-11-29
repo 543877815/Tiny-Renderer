@@ -6,6 +6,12 @@ precision highp int;
 layout(location = 0) in vec2 position;
 layout(location = 1) in float index;
 
+uniform highp usampler2D u_texture;
+uniform mat4 view, projection, model;
+uniform vec2 tanFov, focal, nearFar, viewport;
+uniform vec3 camPos;
+uniform int sphericalHarmonicsDegree;
+uniform int showGaussian;
 //#ifdef USE_GPU_SORT
 //layout(std430, binding = 0) buffer MySSBO {
 //	uint index[];
@@ -13,16 +19,6 @@ layout(location = 1) in float index;
 //#else
 //layout(location = 1) in float index;
 //#endif
-
-uniform highp usampler2D u_texture;
-uniform mat4 view, projection;
-uniform vec2 focal;
-uniform vec2 viewport;
-uniform vec3 camPos;
-uniform vec2 tanFov;
-uniform vec2 projParams;
-uniform int sphericalHarmonicsDegree;
-uniform int showGaussian;
 
 out vec2 vPosition;
 out vec2 vCenter;
@@ -140,8 +136,8 @@ mat2 computeCov2D(vec4 cam, uvec4 cov3d1, uvec4 cov3d2)
 
 	float WIDTH = viewport.x;
 	float HEIGHT = viewport.y;
-	float Z_NEAR = projParams.x;
-	float Z_FAR = projParams.y;
+	float Z_NEAR = nearFar.x;
+	float Z_FAR = nearFar.y;
 
 	float SX = projection[0][0];
 	float SY = projection[1][1];
@@ -210,15 +206,16 @@ void main()
 	vCov2d_inv = mat2(1.0f, 0.0f, 0.0f, 1.0f);
 	vCenter = vec2(100.0f, 100.0f);
 
-#ifdef USE_GPU_SORT
-	uint depthIndex = uint(index[gl_InstanceID]);
-#else
+	//#ifdef USE_GPU_SORT
+	//	uint depthIndex = uint(index[gl_InstanceID]);
+	//#else
+	//	uint depthIndex = uint(index);
+	//#endif
 	uint depthIndex = uint(index);
-#endif
 
 	uvec4 cen = texelFetch(u_texture, ivec2((depthIndex & 0x7fu) << 4, depthIndex >> 7), 0);
 	vec3 pos3d = uintBitsToFloat(cen.xyz);
-	vec4 cam = view * vec4(pos3d, 1);
+	vec4 cam = view * model * vec4(pos3d, 1);
 	vec4 pos2d = projection * cam;
 	vec3 center = vec3(pos2d) / pos2d.w;
 

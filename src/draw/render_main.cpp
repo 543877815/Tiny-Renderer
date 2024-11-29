@@ -1,6 +1,6 @@
 #include "render_main.h"
 #include "../manager/callback.h"
-#include "../render_objs/ply_obj.h"
+#include "../render_objs/gs_ply_obj.h"
 #include "../register/register_uniform_setter.h"
 
 std::shared_ptr<RenderMain> RenderMain::m_instance = nullptr;
@@ -49,19 +49,19 @@ void RenderMain::PrepareDraw()
 	m_delta_time = currentFrame - m_lastFrame;
 	m_lastFrame = currentFrame;
 	ProcessInput(m_window, m_delta_time);
-
+	SetUpDrawUniform();
 	// mvp transform
 	//processViewWorld(m_window);
 	//processViewCamera(m_window, SCR_WIDTH, SCR_HEIGHT);
 	//processModelMatrix(m_window, model);
 }
 
-void RenderMain::SetUpDrawUniform(std::unordered_map<std::string, std::any>& drawUniforms)
+void RenderMain::SetUpDrawUniform()
 {
-
+	//m_drawUniforms.clear();
 	for (const auto& uniform : m_renderObjUniforms) {
 		if (m_uniformSetter->Contain(uniform)) {
-			m_uniformSetter->GetFunc(uniform)(drawUniforms);
+			m_uniformSetter->GetFunc(uniform)(m_drawUniforms);
 		}
 	}
 }
@@ -81,12 +81,10 @@ void RenderMain::Draw()
 	glm::mat4 model = glm::mat4(1.0f);
 
 	std::vector<std::function<void()>> functions;
-	std::unordered_map<std::string, std::any> drawUniforms;
-	SetUpDrawUniform(drawUniforms);
 	for (size_t i = 0; i < m_renderObjs.size(); i++) {
 		auto& renderObj = m_renderObjs[i];
 		auto& config = m_renderObjConfigs[i];
-		renderObj->DrawObj(drawUniforms);
+		renderObj->DrawObj(m_drawUniforms);
 		// ImGUI Callback
 		auto callback = [&renderObj]() {
 			renderObj->ImGuiCallback();

@@ -1,4 +1,4 @@
-#include "ply_obj.h"
+#include "./gs_ply_obj.h"
 #include <mutex>
 RENDERABLE_BEGIN
 constexpr const float SH_C0 = 0.28209479177387814f;
@@ -38,7 +38,8 @@ unsigned int Base3DGSObj::Part1By2(unsigned int x)
 	x = (x ^ (x << 16)) & 0xff0000ff;
 	x = (x ^ (x << 8)) & 0x0300f00f;
 	x = (x ^ (x << 4)) & 0x030c30c3;
-	x = (x ^ (x << 2)) & 0x09249249;   x = (x ^ (x << 2)) & 0x09249249;
+	x = (x ^ (x << 2)) & 0x09249249;
+	x = (x ^ (x << 2)) & 0x09249249;
 	return x;
 }
 
@@ -55,6 +56,7 @@ std::shared_ptr<Base3DGSCamera> Base3DGSCamera::GetInstance()
 
 	if (m_instance == nullptr) {
 		m_instance = std::make_shared<Base3DGSCamera>();
+		m_instance->SetProjection();
 	}
 	return m_instance;
 }
@@ -125,22 +127,21 @@ void PlyObj::Draw()
 
 void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
-	auto projection = std::any_cast<glm::mat4>(uniform.at("projection"));
-	auto view = std::any_cast<glm::mat4>(uniform.at("view"));
-	auto model = std::any_cast<glm::mat4>(uniform.at("model"));
-	auto focal = std::any_cast<glm::vec2>(uniform.at("focal"));
-	auto viewport = std::any_cast<glm::vec2>(uniform.at("viewport"));
-	auto camPos = std::any_cast<glm::vec3>(uniform.at("camPos"));
-	auto tanFov = std::any_cast<glm::vec2>(uniform.at("tanFov"));
-	auto projParams = std::any_cast<glm::vec2>(uniform.at("projParams"));
+	glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("projection"));
+	glm::mat4 view = std::any_cast<glm::mat4>(uniform.at("view"));
+	glm::mat4 model = std::any_cast<glm::mat4>(uniform.at("model"));
+	glm::vec2 focal = std::any_cast<glm::vec2>(uniform.at("focal"));
+	glm::vec2 viewport = std::any_cast<glm::vec2>(uniform.at("viewport"));
+	glm::vec3 camPos = std::any_cast<glm::vec3>(uniform.at("camPos"));
+	glm::vec2 tanFov = std::any_cast<glm::vec2>(uniform.at("tanFov"));
+	glm::vec2 nearFar = std::any_cast<glm::vec2>(uniform.at("nearFar"));
 
 	SetUpGLStatus();
+	RunSortUpdateDepth(m_vertices);
 
 	m_shader->Use();
 	m_renderVAO->Bind();
-	RunSortUpdateDepth(m_vertices);
 	m_gaussian_texture->BindTexture(0);
-	m_shader->SetInt("u_texture", m_textureIdx);
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
@@ -148,16 +149,14 @@ void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetVec2("viewport", viewport);
 	m_shader->SetVec3("camPos", camPos);
 	m_shader->SetVec2("tanFov", tanFov);
-	m_shader->SetVec2("projParams", projParams);
+	m_shader->SetVec2("nearFar", nearFar);
+	m_shader->SetVec2("nearFar", 1.0f, 2.0f);
+	m_shader->SetInt("u_texture", static_cast<int>(m_textureIdx));
 	m_shader->SetInt("sphericalHarmonicsDegree", 3);
+	m_shader->SetInt("showGaussian", 3);
 	Draw();
 	m_renderVAO->Unbind();
 
-}
-
-void PlyObj::I_RunSortUpdateDepth()
-{
-	RunSortUpdateDepth(m_vertices);
 }
 
 void PlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
@@ -395,6 +394,32 @@ void Base3DGSObj::SetUpAttribute()
 	m_depthIndex.resize(m_vertexCount);
 	m_indices.resize(m_vertexCount);
 	m_sizeList.resize(m_vertexCount);
+}
+
+void Base3DGSObj::ImGuiCallback()
+{
+	static bool isFolded = true;
+	if (ImGui::CollapsingHeader("Base3DGSObj", &isFolded, ImGuiTreeNodeFlags_DefaultOpen))  // default open
+	{
+		static int maxVertexCount = m_vertexCount;
+		int vertexCount = static_cast<int>(m_vertexCount);
+		if (ImGui::SliderInt("vertexCount", &vertexCount, 0, maxVertexCount))
+		{
+			m_vertexCount = static_cast<uint32_t>(vertexCount);
+		}
+
+		static int selected_option = 0;
+		ImGui::Text("Sorting Method");
+		if (ImGui::RadioButton("Countint Sort", &selected_option, 0))
+		{
+			m_sortMethod = static_cast<SORT_METHOD>(selected_option);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Quick Sort", &selected_option, 1))
+		{
+			m_sortMethod = static_cast<SORT_METHOD>(selected_option);
+		}
+	}
 }
 
 

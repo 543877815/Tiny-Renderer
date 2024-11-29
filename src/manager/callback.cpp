@@ -201,7 +201,7 @@ void ProcessViewCamera(GLFWwindow* window, const int& screen_width, const int& s
 	bool KeyI = glfwGetKey(window, GLFW_KEY_I);
 	bool shift = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) || glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 
-	glm::mat4 inverseMatrix = glm::inverse(camera->GetViewMatrix());
+	glm::mat4 inverseMatrix = glm::inverse(camera->GetViewMat());
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		if (shift) {
 			translate4(inverseMatrix, 0.0f, -transitionSpeed, 0.0f);
@@ -320,7 +320,7 @@ void ProcessViewWorld(GLFWwindow* window)
 
 	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), translateVector);
 	camera->SetPosition(camera->GetPosition() + translateVector);
-	camera->SetViewMatrix(camera->GetViewMatrix() * translationMatrix);
+	camera->SetViewMatrix(camera->GetViewMat() * translationMatrix);
 
 	glm::vec3 axis = glm::vec3(1.0f, 0.0f, 0.0f);
 	float rotationSpeed = 0.1f;
@@ -351,5 +351,5 @@ void ProcessViewWorld(GLFWwindow* window)
 	}
 
 	glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, axis);
-	camera->SetViewMatrix(camera->GetViewMatrix() * rotationMatrix);
+	camera->SetViewMatrix(camera->GetViewMat() * rotationMatrix);
 }

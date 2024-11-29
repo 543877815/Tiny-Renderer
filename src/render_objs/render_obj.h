@@ -56,7 +56,7 @@ protected:
 	std::unique_ptr<Shader> m_shader = nullptr;
 	std::unique_ptr<Texture> m_textures = nullptr;
 	std::vector<size_t> m_textureIdxes{};
-	virtual void SetUpShader(const std::string& vertex_shader, const std::string& fragment_shader);
+	virtual void SetUpShader(const std::string& vertexShader, const std::string& fragmentShader);
 	virtual void SetUpShader() {};
 	virtual void SetUpData() {};
 	virtual void SetUpTexture(int num = 0) {};

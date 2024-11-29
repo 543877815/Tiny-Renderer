@@ -55,11 +55,11 @@ const float rad2degree = 180.0f / PI;
 const float degree2rad = PI / 180.0f;
 void Camera::UpdateViewMatrix(glm::quat& quaternion)
 {
-	if (m_spherical_surface_rotation)
+	if (m_sphericalSurfaceRotation)
 		// Update the camera's position
 		m_position = rotateVector(m_position, quaternion);
 	// Update the camera's front vector
-	m_front_vec = rotateVector(m_front_vec, quaternion);
+	m_frontVec = rotateVector(m_frontVec, quaternion);
 	// Update the camera's up vector
 	m_up_vec = rotateVector(m_up_vec, quaternion);
 
@@ -91,17 +91,17 @@ void Camera::UpdateCameraRotationSphere(const glm::vec3& axis, float angle)
 
 }
 
-void Camera::InitializeCameraVectors() {
+//void Camera::InitializeCameraVectors() {
 	// calculate the new Front vector
-	glm::vec3 front;
-	front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	front.y = sin(glm::radians(m_pitch));
-	front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front_vec = glm::normalize(front);
+	//glm::vec3 front;
+	//front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	//front.y = sin(glm::radians(m_pitch));
+	//front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	//m_front_vec = glm::normalize(front);
 	// also re-calculate the Right and Up vector
-	m_right_vec = glm::normalize(glm::cross(m_front_vec, m_worldUp_vec));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-	m_up_vec = glm::normalize(glm::cross(m_right_vec, m_front_vec));
-}
+	//m_right_vec = glm::normalize(glm::cross(m_front_vec, m_worldUp_vec));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+	//m_up_vec = glm::normalize(glm::cross(m_right_vec, m_front_vec));
+//}
 
 void Camera::translate4(glm::mat4& matrix, float x, float y, float z)
 {
@@ -109,7 +109,7 @@ void Camera::translate4(glm::mat4& matrix, float x, float y, float z)
 	m_position.x = matrix[3][0];
 	m_position.y = matrix[3][1];
 	m_position.z = matrix[3][2];
-	m_spherical_surface_rotation = false;
+	m_sphericalSurfaceRotation = false;
 	UpdateViewMatrix();
 }
 
@@ -125,19 +125,17 @@ void Camera::ProcessScrollCallback(float xoffset, float yoffset)
 
 void Camera::RenderController()
 {
-	static bool isFolded = true;
-	if (ImGui::CollapsingHeader("Camera", &isFolded, ImGuiTreeNodeFlags_DefaultOpen))  // default open
+	if (ImGui::CollapsingHeader("Camera", &m_isFolded, ImGuiTreeNodeFlags_DefaultOpen))  // default open
 	{
-
 		static int selected_option = 0;
 		if (ImGui::RadioButton("Perspective Projection", &selected_option, 0))
 		{
-			m_camera_projection = PERSPECTIVE;
+			m_cameraProjMethod = static_cast<CameraProjMethod>(selected_option);
 		}
 		ImGui::SameLine();
 		if (ImGui::RadioButton("Orthogonal Projection", &selected_option, 1))
 		{
-			m_camera_projection = ORTHOGONAL;
+			m_cameraProjMethod = static_cast<CameraProjMethod>(selected_option);
 		}
 
 		if (ImGui::SliderFloat3("Position", glm::value_ptr(m_position), -10.0f, 10.0f))
@@ -145,14 +143,14 @@ void Camera::RenderController()
 			UpdateViewMatrix();
 		}
 		ImGui::SameLine();
-		if (ImGui::Checkbox("Facing Origin", &m_spherical_surface_rotation))
+		if (ImGui::Checkbox("Facing Origin", &m_sphericalSurfaceRotation))
 		{
-			m_front_vec = -m_position;
+			m_frontVec = -m_position;
 			UpdateViewMatrix();
 		}
-		if (!m_spherical_surface_rotation)
+		if (!m_sphericalSurfaceRotation)
 		{
-			if (ImGui::SliderFloat3("Front Vector", glm::value_ptr(m_front_vec), -1.0f, 1.0f))
+			if (ImGui::SliderFloat3("Front Vector", glm::value_ptr(m_frontVec), -1.0f, 1.0f))
 			{
 				UpdateViewMatrix();
 			}
@@ -178,7 +176,7 @@ void Camera::RenderController()
 		ImGui::SameLine();
 		isEulerAngleUpdate |= UpdateEulerAngle(m_roll, euler_angle_diff.z, "Roll");
 		ImGui::SameLine();
-		ImGui::SliderFloat("Rotation Speed", &m_rotation_speed, 1.0f, 5.0f);
+		ImGui::SliderFloat("Rotation Speed", &m_rotationSpeed, 1.0f, 5.0f);
 		ImGui::PopItemWidth();
 
 		if (isEulerAngleUpdate)
@@ -187,14 +185,14 @@ void Camera::RenderController()
 			UpdateViewMatrix(rotation_quaternion);
 		}
 
-		if (m_camera_projection == PERSPECTIVE && ImGui::SliderFloat("Fov", &m_fov, 15.0f, 150.0f))
+		if (m_cameraProjMethod == PERSPECTIVE && ImGui::SliderFloat("Fov", &m_fov, 15.0f, 150.0f))
 		{
 			UpdatePerspectiveProjectionMatrix();
 		}
 
 		if (ImGui::SliderFloat("Near Plain", &m_near, 0.1f, 5.0f))
 		{
-			if (m_camera_projection == PERSPECTIVE)
+			if (m_cameraProjMethod == PERSPECTIVE)
 				UpdatePerspectiveProjectionMatrix();
 			else
 				UpdateOrthogonalProjectionMatrix();
@@ -202,28 +200,28 @@ void Camera::RenderController()
 
 		if (ImGui::SliderFloat("Far Plain", &m_far, 1000.0f, 2000.f))
 		{
-			if (m_camera_projection == PERSPECTIVE)
+			if (m_cameraProjMethod == PERSPECTIVE)
 				UpdatePerspectiveProjectionMatrix();
 			else
 				UpdateOrthogonalProjectionMatrix();
 		}
 
-		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Left Plain", &m_left, -1.0f, -1.4f))
+		if (m_cameraProjMethod == ORTHOGONAL && ImGui::SliderFloat("Left Plain", &m_left, -1.0f, -1.4f))
 		{
 			UpdateOrthogonalProjectionMatrix();
 		}
 
-		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Right Plain", &m_right, 1.0f, 1.4f))
+		if (m_cameraProjMethod == ORTHOGONAL && ImGui::SliderFloat("Right Plain", &m_right, 1.0f, 1.4f))
 		{
 			UpdateOrthogonalProjectionMatrix();
 		}
 
-		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Top Plain", &m_top, 1.0f, 1.4f))
+		if (m_cameraProjMethod == ORTHOGONAL && ImGui::SliderFloat("Top Plain", &m_top, 1.0f, 1.4f))
 		{
 			UpdateOrthogonalProjectionMatrix();
 		}
 
-		if (m_camera_projection == ORTHOGONAL && ImGui::SliderFloat("Bottom Plain", &m_bottom, -1.0f, -1.4f))
+		if (m_cameraProjMethod == ORTHOGONAL && ImGui::SliderFloat("Bottom Plain", &m_bottom, -1.0f, -1.4f))
 		{
 			UpdateOrthogonalProjectionMatrix();
 		}
@@ -235,8 +233,8 @@ void Camera::ProcessMouseCallback(float xoffset, float yoffset)
 	const static float sensitive = 2.0f;
 	if (m_mouse_pressed)
 	{
-		float dx = (m_mouse_last_pos_x - xoffset) / m_screen_width;
-		float dy = (m_mouse_last_pos_y - yoffset) / m_screen_height;
+		float dx = (m_mouse_last_pos_x - xoffset) / m_screenWidth;
+		float dy = (m_mouse_last_pos_y - yoffset) / m_screenHeight;
 		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), dx);
 		glm::vec3 axis = glm::normalize(glm::cross(-m_position, m_up_vec));
 		UpdateCameraRotationSphere(axis, dy);
@@ -273,7 +271,6 @@ std::shared_ptr<Camera> Camera::GetInstance()
 
 Camera::Camera(glm::vec3 position, glm::vec3 up_vec)
 {
-	InitializeCameraVectors();
 	UpdateViewMatrix();
 	UpdateOrthogonalProjectionMatrix();
 	UpdatePerspectiveProjectionMatrix();
@@ -281,58 +278,58 @@ Camera::Camera(glm::vec3 position, glm::vec3 up_vec)
 
 void Camera::UpdateViewMatrix()
 {
-	m_viewMatrix = glm::lookAt(m_position, m_position + m_front_vec, m_up_vec);
+	m_viewMat = glm::lookAt(m_position, m_position + m_frontVec, m_up_vec);
 }
 
 void Camera::UpdateOrthogonalProjectionMatrix()
 {
-	m_orthogonalProjectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);
+	m_orthoProjMat = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);
 }
 
 void Camera::UpdatePerspectiveProjectionMatrix()
 {
-	m_prospectiveProjectionMatrix = glm::perspective(glm::radians(m_fov), m_screen_aspect_rate, m_near, m_far);
+	m_prospProjMat = glm::perspective(glm::radians(m_fov), m_screenAspectRate, m_near, m_far);
 }
 
 void Camera::ProcessFramebufferSizeCallback(int width, int height)
 {
-	m_screen_height = height;
-	m_screen_width = width;
-	m_screen_aspect_rate = (float)m_screen_width / (float)m_screen_height;
+	m_screenHeight = height;
+	m_screenWidth = width;
+	m_screenAspectRate = (float)m_screenWidth / (float)m_screenHeight;
 	UpdatePerspectiveProjectionMatrix();
 }
 
 void Camera::ProcessKeyboard(CameraKeyboard direction, float deltaTime)
 {
-	glm::mat4 inverseViewMatrix = glm::inverse(m_viewMatrix);
+	glm::mat4 inverseViewMatrix = glm::inverse(m_viewMat);
 	if (direction == SCREEN_MOVE_FORWARD)
-		translate4(inverseViewMatrix, 0.0f, 0.0f, -m_transition_speed * deltaTime);
+		translate4(inverseViewMatrix, 0.0f, 0.0f, -m_transitionSpeed * deltaTime);
 	else if (direction == SCREEN_MOVE_BACKWARD)
-		translate4(inverseViewMatrix, 0.0f, 0.0f, m_transition_speed * deltaTime);
+		translate4(inverseViewMatrix, 0.0f, 0.0f, m_transitionSpeed * deltaTime);
 	else if (direction == SCREEN_MOVE_UP)
-		translate4(inverseViewMatrix, 0.0f, m_transition_speed * deltaTime, 0.0f);
+		translate4(inverseViewMatrix, 0.0f, m_transitionSpeed * deltaTime, 0.0f);
 	else if (direction == SCREEN_MOVE_DOWN)
-		translate4(inverseViewMatrix, 0.0f, -m_transition_speed * deltaTime, 0.0f);
+		translate4(inverseViewMatrix, 0.0f, -m_transitionSpeed * deltaTime, 0.0f);
 	else if (direction == SCREEN_MOVE_LEFT)
-		translate4(inverseViewMatrix, -m_transition_speed * deltaTime, 0.0f, 0.0f);
+		translate4(inverseViewMatrix, -m_transitionSpeed * deltaTime, 0.0f, 0.0f);
 	else if (direction == SCREEN_MOVE_RIGHT)
-		translate4(inverseViewMatrix, m_transition_speed * deltaTime, 0.0f, 0.0f);
+		translate4(inverseViewMatrix, m_transitionSpeed * deltaTime, 0.0f, 0.0f);
 
 	if (direction == CAMERA_ROTATE_LEFT)
-		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), m_rotation_speed * deltaTime);
+		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), m_rotationSpeed * deltaTime);
 	else if (direction == CAMERA_ROTATE_RIGHT)
-		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), -m_rotation_speed * deltaTime);
+		UpdateCameraRotationSphere(glm::vec3(0.0f, 1.0f, 0.0f), -m_rotationSpeed * deltaTime);
 	else if (direction == CAMERA_ROTATE_CLOCKWISE)
-		UpdateCameraRotationSphere(m_front_vec, m_rotation_speed * deltaTime);
+		UpdateCameraRotationSphere(m_frontVec, m_rotationSpeed * deltaTime);
 	else if (direction == CAMERA_ROTATE_ANTICLOCKWISE)
-		UpdateCameraRotationSphere(m_front_vec, -m_rotation_speed * deltaTime);
+		UpdateCameraRotationSphere(m_frontVec, -m_rotationSpeed * deltaTime);
 	else if (direction == CAMERA_ROTATE_UP || direction == CAMERA_ROTATE_DOWN)
 	{
 		glm::vec3 axis = glm::normalize(glm::cross(-m_position, m_up_vec));
 		if (direction == CAMERA_ROTATE_UP)
-			UpdateCameraRotationSphere(axis, m_rotation_speed * deltaTime);
+			UpdateCameraRotationSphere(axis, m_rotationSpeed * deltaTime);
 		if (direction == CAMERA_ROTATE_DOWN)
-			UpdateCameraRotationSphere(axis, -m_rotation_speed * deltaTime);
+			UpdateCameraRotationSphere(axis, -m_rotationSpeed * deltaTime);
 	}
 
 }

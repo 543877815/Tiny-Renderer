@@ -5,17 +5,25 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
-#include <glm/glm.hpp>
+#include <cfloat>
 #include "common.h"
 #include "../draw/vertexbuffer.h"
 #include "../draw/camera.h"
 
-
 RENDERABLE_BEGIN
-enum SORT_ORDER : uint32_t {
+enum SORT_ORDER : uint32_t
+{
 	DESCENDING,
 	SDCENDING
 };
+
+enum SORT_METHOD : uint32_t
+{
+	COUNTING_SORT,
+	QUICK_SORT,
+	RADIX_SORT
+};
+
 
 struct PlyVertexStorage {
 	glm::vec3 position;
@@ -88,12 +96,12 @@ public:
 	float GetFar() { return m_far; }
 	glm::vec2 GetFocal() { return glm::vec2(m_fx, m_fy); }
 	glm::vec2 GetTanFov() { return glm::vec2(m_width / m_fx * 0.5f, m_height / m_fy * 0.5f); }
-	glm::vec2 GetProjParams() { return glm::vec2(m_near, m_far); }
+	glm::vec2 GetNearFar() { return glm::vec2(m_near, m_far); }
 	const glm::mat4& GetProjection() const { return m_projection; }
 
 private:
-	float m_fy = 1040.0f;  // focal_y
-	float m_fx = 1040.0f; // focal_x 
+	float m_fy = 1164.66f;  // focal_y
+	float m_fx = 1159.58f; // focal_x 
 	float m_width = 1024.0f;
 	float m_height = 768.0f;
 	float m_near = 0.1f;
@@ -119,17 +127,17 @@ protected:
 	virtual void SetUpData();
 	virtual void SetUpGLStatus();
 	void SetUpAttribute();
-	virtual void I_RunSortUpdateDepth() = 0;
 	template <typename T> void PresortIndices(std::vector<T>& vertices);
 	template <typename T> void RunSortUpdateDepth(std::vector<T>& vertices);
-	template <typename T> void RadixSort(std::vector<T>& vertices);
+	template <typename T> void CountingSort(std::vector<T>& vertices);
 	template <typename T> void QuickSort(std::vector<T>& vertices);
+	void ImGuiCallback();
 
 protected:
 	uint32_t m_vertexCount = 0, m_vertexLength = 0;
 	int m_texture_width = 0, m_textureHeight = 0;
 	MODEL_TYPE m_type;
-	bool m_useRadixSort = false;
+	SORT_METHOD m_sortMethod = COUNTING_SORT;
 	size_t m_textureIdx = -1;
 	SORT_ORDER m_sortOrder = DESCENDING;
 	std::vector<uint32_t> m_depthIndex{};
@@ -176,7 +184,6 @@ public:
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 
 private:
-	void I_RunSortUpdateDepth() override;
 	void LoadModelHeader(std::ifstream& file, PlyHeader& header);
 	void LoadVertices(std::ifstream& file);
 	void GenerateTextureData();
@@ -192,7 +199,7 @@ private:
 template<typename T>
 inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 {
-	for (size_t i = 0; i < m_indices.size(); i++) {
+	for (uint32_t i = 0; i < m_indices.size(); i++) {
 		m_indices[i] = i;
 	}
 	std::vector<float> x;
@@ -225,51 +232,45 @@ inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 template<typename T>
 inline void Base3DGSObj::RunSortUpdateDepth(std::vector<T>& vertices)
 {
-	if (m_useRadixSort) {
-		RadixSort(vertices);
+	if (m_sortMethod == COUNTING_SORT) {
+		CountingSort(vertices);
 	}
-	else {
+	else if (m_sortMethod == QUICK_SORT) {
 		QuickSort(vertices);
 	}
 	m_depthIndexVBO->Update(m_depthIndex);
 }
 
 template <typename T>
-inline void Base3DGSObj::RadixSort(std::vector<T>& vertices)
+inline void Base3DGSObj::CountingSort(std::vector<T>& vertices)
 {
 	auto instance = Camera::GetInstance();
-	auto modelViewProjMatrix = instance->GetProjectionMatrix() * instance->GetViewMatrix();
-	int32_t maxDepth = 0x80000000;
-	int32_t minDepth = 0x7fffffff;
+	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+	float maxDepth = FLT_MIN;
+	float minDepth = FLT_MAX;
 	m_sizeList.resize(m_vertexCount);
 	std::memset(m_sizeList.data(), 0, sizeof(uint32_t) * m_sizeList.size());
+
+	std::vector<float>depth_f(m_vertexCount, 0);
 
 	for (size_t i = 0; i < m_vertexCount; i++) {
 		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
 		auto& pos = vertices[idx].position;
-		float depth_f = (modelViewProjMatrix[0][2] * pos.x +
+		depth_f[i] = (modelViewProjMatrix[0][2] * pos.x +
 			modelViewProjMatrix[1][2] * pos.y +
-			modelViewProjMatrix[2][2] * pos.z) * 4096.0;
+			modelViewProjMatrix[2][2] * pos.z);
 
-		m_sizeList[i] = static_cast<int32_t>(depth_f);
-		maxDepth = (std::max)(maxDepth, m_sizeList[i]);
-		minDepth = (std::min)(minDepth, m_sizeList[i]);
+		maxDepth = (std::max)(maxDepth, depth_f[i]);
+		minDepth = (std::min)(minDepth, depth_f[i]);
 	}
 
 	uint32_t sortBit = 256 * 256;
-	float depthInv = static_cast<float>(sortBit) / static_cast<float>(maxDepth - minDepth);
-
 	size_t count = sortBit + 1; // +1 防止越界
 	if (m_counts.empty()) m_counts.resize(count);
 	std::memset(m_counts.data(), 0, sizeof(uint32_t) * m_counts.size());
-
-	for (size_t i = 0; i < m_vertexCount; i++) {
-		if (m_sortOrder == DESCENDING) {
-			m_sizeList[i] = static_cast<int32_t>((maxDepth - m_sizeList[i]) * depthInv); // 降序
-		}
-		else {
-			m_sizeList[i] = static_cast<int32_t>((m_sizeList[i] - minDepth) * depthInv); // 升序
-		}
+	for (size_t i = 0; i < m_vertexCount; i++)
+	{
+		m_sizeList[i] = (maxDepth - depth_f[i]) / (maxDepth - minDepth + 0.01) * sortBit;
 		m_counts[m_sizeList[i]]++;
 	}
 
@@ -283,17 +284,13 @@ inline void Base3DGSObj::RadixSort(std::vector<T>& vertices)
 	for (size_t i = 0; i < m_vertexCount; i++) {
 		m_depthIndex[m_starts[m_sizeList[i]]++] = i;
 	}
-
-	std::cout << m_depthIndex[0] << " " << m_depthIndex[1] << " " << m_depthIndex[2] << std::endl;
 };
-
-
 
 template <typename T>
 inline void Base3DGSObj::QuickSort(std::vector<T>& m_vertices)
 {
 	auto instance = Camera::GetInstance();
-	auto modelViewProjMatrix = instance->GetProjectionMatrix() * instance->GetViewMatrix();
+	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
 
 	m_index2depth.resize(m_vertexCount);
 	std::memset(m_index2depth.data(), 0, sizeof(float) * m_index2depth.size());

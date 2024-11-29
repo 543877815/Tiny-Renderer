@@ -39,7 +39,7 @@ void SphereObj::ImGuiCallback()
 
 void SphereObj::SetUpData()
 {
-	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	unsigned seed = static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count());
 	std::mt19937 generator(seed);
 	auto m_uniform01 = std::uniform_real_distribution<float>(0.0, 1.0);
 	std::vector<glm::vec3> vertices;

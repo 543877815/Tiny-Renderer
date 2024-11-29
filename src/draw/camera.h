@@ -11,7 +11,7 @@ class Camera
 {
 public:
 	// Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-	enum CameraKeyboard {
+	enum CameraKeyboard : uint32_t {
 		CAMERA_ROTATE_LEFT,
 		CAMERA_ROTATE_RIGHT,
 		CAMERA_ROTATE_UP,
@@ -26,17 +26,17 @@ public:
 		SCREEN_MOVE_BACKWARD
 	};
 
-	enum CameraMouseButton {
+	enum CameraMouseButton : uint32_t {
 		MOUSE_BUTTON_RIGHT,
 		MOUSE_BUTTON_LEFT
 	};
 
-	enum CameraMouseAction {
+	enum CameraMouseAction : uint32_t{
 		MOUSE_RELEASE,
 		MOUSE_PRESS
 	};
 
-	enum CameraMods {
+	enum CameraMods : uint32_t {
 		NONE,
 		MOUSE_MOD_SHIFT,
 		MOUSE_MOD_CONTROL,
@@ -44,7 +44,7 @@ public:
 		MOUSE_MOD_SUPER
 	};
 
-	enum CameraProjection {
+	enum CameraProjMethod : uint32_t {
 		PERSPECTIVE,
 		ORTHOGONAL
 	};
@@ -56,11 +56,11 @@ public:
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ) :
 		Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ)) {}
 
-	void SetViewMatrix(glm::mat4 mat) { m_viewMatrix = mat; }
-	const glm::mat4& GetViewMatrix() const { return m_viewMatrix; }
-	const glm::mat4& GetOrthogonalProjectionMatrix() const { return m_orthogonalProjectionMatrix; }
-	const glm::mat4& GetPerspectiveProjectionMatrix() const { return m_prospectiveProjectionMatrix; }
-	const glm::mat4& GetProjectionMatrix() const { return m_camera_projection == PERSPECTIVE ? m_prospectiveProjectionMatrix : m_orthogonalProjectionMatrix; }
+	void SetViewMatrix(glm::mat4 mat) { m_viewMat = mat; }
+	const glm::mat4& GetViewMat() const { return m_viewMat; }
+	const glm::mat4& GetOrthoProjMat() const { return m_orthoProjMat; }
+	const glm::mat4& GetPerspProjMat() const { return m_prospProjMat; }
+	const glm::mat4& GetProjMat() const { return m_cameraProjMethod == PERSPECTIVE ? m_prospProjMat : m_orthoProjMat; }
 	const glm::vec3& GetPosition() const { return m_position; }
 	float GetFov() const { return m_fov; }
 	float GetNear() const { return m_near; }
@@ -69,9 +69,9 @@ public:
 	float GetRight() const { return m_right; }
 	float GetTop() const { return m_top; }
 	float GetBottom() const { return m_bottom; }
-	int GetScreenWidth()const { return m_screen_width; }
-	int GetScreenHeight()const { return m_screen_height; }
-	CameraProjection GetCameraProjection() const { return m_camera_projection; }
+	int GetScreenWidth()const { return m_screenWidth; }
+	int GetScreenHeight()const { return m_screenHeight; }
+	CameraProjMethod GetCameraProj() const { return m_cameraProjMethod; }
 	void UpdateViewMatrix();
 	void UpdateOrthogonalProjectionMatrix();
 	void UpdatePerspectiveProjectionMatrix();
@@ -90,23 +90,23 @@ public:
 private:
 	void UpdateViewMatrix(glm::quat& quaternion);
 	void UpdateCameraRotationSphere(const glm::vec3& axis, float angle);
-	void InitializeCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
+	//void InitializeCameraVectors(); // calculates the front vector from the Camera's (updated) Euler Angles
 	void translate4(glm::mat4& matrix, float x, float y, float z);
 private:
 	// camera Attributes
 	glm::vec3 m_position = glm::vec3(0.0f, 0.0f, 3.0f);
-	glm::vec3 m_front_vec = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 m_up_vec = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 m_right_vec = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 m_worldUp_vec = glm::vec3(0.0f, 1.0f, 0.0f);
-	bool m_spherical_surface_rotation = true;
+	glm::vec3 m_frontVec = -m_position;
+	glm::vec3 m_worldUpVec = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 m_rightVec = glm::normalize(glm::cross(m_frontVec, m_worldUpVec));
+	glm::vec3 m_up_vec = glm::normalize(glm::cross(m_rightVec, m_frontVec));
+	bool m_sphericalSurfaceRotation = true;
 	// euler Angles
 	float m_yaw = -90.0f;
 	float m_pitch = 0.0f;
 	float m_roll = 0.0f;
 	// camera options
-	float m_rotation_speed = 2.0f;
-	float m_transition_speed = 2.0f;
+	float m_rotationSpeed = 2.0f;
+	float m_transitionSpeed = 2.0f;
 	float m_movementSpeed = 2.5f;
 	float m_mouseSensitivity = 0.1f;
 	// projection relative
@@ -118,25 +118,26 @@ private:
 	float m_bottom = -1.2f;
 	float m_top = 1.2f;
 	// speed
-	float m_view_transition_speed = 0.001f;
-	float m_view_rotation_speed = 0.005f;
-	float m_model_transition_speed = 0.001f;
-	float m_model_rotation_speed = 0.005f;
+	float m_viewTransitionSpeed = 0.001f;
+	float m_viewRotationSpeed = 0.005f;
+	float m_modelTransitionSpeed = 0.001f;
+	float m_modelRotationSpeed = 0.005f;
 	// screen
-	int m_screen_width = 800;
-	int m_screen_height = 600;
-	float m_screen_aspect_rate = (float)m_screen_width / (float)m_screen_height;
-
+	int m_screenWidth = 800;
+	int m_screenHeight = 600;
+	float m_screenAspectRate = (float)m_screenWidth / (float)m_screenHeight;
 	// camera matrix
-	glm::mat4 m_viewMatrix;
-	glm::mat4 m_prospectiveProjectionMatrix;
-	glm::mat4 m_orthogonalProjectionMatrix;
-	CameraProjection m_camera_projection = CameraProjection::PERSPECTIVE;
+	glm::mat4 m_viewMat;
+	glm::mat4 m_prospProjMat;
+	glm::mat4 m_orthoProjMat;
+	CameraProjMethod m_cameraProjMethod = CameraProjMethod::PERSPECTIVE;
 	// mouse
 	float m_mouse_last_pos_x = 0.0f;
 	float m_mouse_last_pos_y = 0.0f;
 	float m_mouse_pressed = false;
 	// singleton
 	static std::shared_ptr<Camera> m_instance;
+	// imgui
+	bool m_isFolded = true;
 };
 
