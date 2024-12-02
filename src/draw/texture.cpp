@@ -7,7 +7,7 @@ Texture::Texture(size_t tex_num) {
 	std::fill(m_textures.begin(), m_textures.end(), 0);
 }
 
-size_t Texture::GenerateTexture(const std::string& path) {
+int Texture::GenerateTexture(const std::string& path) {
 	glGenTextures(1, &m_textures[m_idx]);
 	glBindTexture(GL_TEXTURE_2D, m_textures[m_idx]);
 	// set the texture wrapping parameters
@@ -38,7 +38,7 @@ size_t Texture::GenerateTexture(const std::string& path) {
 	return m_idx++;
 }
 
-size_t Texture::GenerateTexture(int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data)
+int Texture::GenerateTexture(int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data)
 {
 	glGenTextures(1, &m_textures[m_idx]);
 	glBindTexture(GL_TEXTURE_2D, m_textures[m_idx]);
@@ -48,6 +48,16 @@ size_t Texture::GenerateTexture(int width, int height, uint32_t internal_format,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTypeToGL[static_cast<int>(params.tWrap)]);
 	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, data_type, data);
 	return m_idx++;
+}
+
+void Texture::UpdateTexture(size_t idx, int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data)
+{
+	glBindTexture(GL_TEXTURE_2D, m_textures[idx]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterTypeToGL[static_cast<int>(params.minFilter)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterTypeToGL[static_cast<int>(params.magFilter)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapTypeToGL[static_cast<int>(params.sWrap)]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTypeToGL[static_cast<int>(params.tWrap)]);
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, data_type, data);
 }
 
 uint32_t Texture::GetTexture(size_t idx) {

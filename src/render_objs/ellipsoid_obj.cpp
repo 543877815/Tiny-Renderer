@@ -1,3 +1,4 @@
+#include <eigen3/Eigen/Dense>
 #include "ellipsoid_obj.h"
 
 RENDERABLE_BEGIN
@@ -105,9 +106,9 @@ void EllipsoidObj::SetUpData()
 	Eigen::Vector3f center(0.0f, 0.0f, 0.0f);
 	for (int i = 0; i < m_number; i++) {
 		Eigen::VectorXf z(3);
-		z(0) = d(gen);
-		z(1) = d(gen);
-		z(2) = d(gen);
+		z(0) = static_cast<float>(d(gen));
+		z(1) = static_cast<float>(d(gen));
+		z(2) = static_cast<float>(d(gen));
 		Eigen::VectorXf y = lltOfSigma.matrixL() * z + center;
 		float norm_y = y.norm();
 		glm::vec3 radius = glm::sqrt(value) / norm_y;

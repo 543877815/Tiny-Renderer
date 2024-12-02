@@ -4,19 +4,19 @@
 REGISTER_BEGIN
 
 
-void UniformSetter::SetPerspectiveProjectionUniform(std::unordered_map<std::string, std::any>& uniforms)
+void UniformSetter::SetPerspProjUniform(std::unordered_map<std::string, std::any>& uniforms)
 {
 	auto instance = Camera::GetInstance();
 	uniforms["perspective_projection"] = instance->GetProjMat();
 }
 
-void UniformSetter::SetOrthogonalProjectionUniform(std::unordered_map<std::string, std::any>& uniforms)
+void UniformSetter::SetOrthoProjUniform(std::unordered_map<std::string, std::any>& uniforms)
 {
 	auto instance = Camera::GetInstance();
 	uniforms["orthogonal_projection"] = instance->GetProjMat();
 }
 
-void UniformSetter::SetProjectionUniform(std::unordered_map<std::string, std::any>& uniforms)
+void UniformSetter::SetProjUniform(std::unordered_map<std::string, std::any>& uniforms)
 {
 	auto instance = Camera::GetInstance();
 	uniforms["projection"] = instance->GetProjMat();
@@ -64,7 +64,7 @@ void UniformSetter::SetNearFarUniform(std::unordered_map<std::string, std::any>&
 	uniforms["nearFar"] = instance->GetNearFar();
 }
 
-void UniformSetter::Set3DGSProjectionUniform(std::unordered_map<std::string, std::any>& uniforms)
+void UniformSetter::Set3DGSProjUniform(std::unordered_map<std::string, std::any>& uniforms)
 {
 	auto instance = Renderable::Base3DGSCamera::GetInstance();
 	uniforms["3dgs_projection"] = instance->GetProjection();

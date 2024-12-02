@@ -49,13 +49,14 @@ public:
 
 	std::vector<uint32_t> m_textures;
 	Texture(size_t tex_num);
-	size_t GenerateTexture(const std::string& path);
-	size_t GenerateTexture(int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data);
+	int GenerateTexture(const std::string& path);
+	int GenerateTexture(int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data);
+	void UpdateTexture(size_t idx, int width, int height, uint32_t internal_format, uint32_t data_format, uint32_t data_type, Params& params, void* data);
 	uint32_t GetTexture(size_t idx);
 	void BindTexture(size_t idx);
 
 private:
-	size_t m_idx = 0;
+	int m_idx = 0;
 };
 
 

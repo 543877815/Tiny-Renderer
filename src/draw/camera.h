@@ -31,7 +31,7 @@ public:
 		MOUSE_BUTTON_LEFT
 	};
 
-	enum CameraMouseAction : uint32_t{
+	enum CameraMouseAction : uint32_t {
 		MOUSE_RELEASE,
 		MOUSE_PRESS
 	};
@@ -48,6 +48,7 @@ public:
 		PERSPECTIVE,
 		ORTHOGONAL
 	};
+
 	static std::shared_ptr<Camera> GetInstance();
 	Camera() : Camera(m_position, m_up_vec) {}
 	// constructor with vectors

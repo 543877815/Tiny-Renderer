@@ -33,6 +33,7 @@ private:
 	std::shared_ptr<ImGuiManager> m_imguiMgr = nullptr;
 	std::unique_ptr<Registry::UniformSetter> m_uniformSetter = nullptr;
 	GLFWwindow* m_window = nullptr;
+	std::shared_ptr<Renderable::GSFrameBufferObj> m_fbo = nullptr;
 	std::vector<std::shared_ptr<Renderable::RenderObjectBase>> m_renderObjs{};
 	std::vector<std::shared_ptr<Parser::RenderObjConfigBase>> m_renderObjConfigs{};
 	std::unordered_set<std::string> m_renderObjUniforms{};

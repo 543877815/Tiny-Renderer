@@ -2,7 +2,6 @@
 #include <format>
 
 ComputeShader::ComputeShader(const char* computePath)
-
 {
 	// 1. retrieve the vertex/fragment source code from filePath
 	std::string computeCode;

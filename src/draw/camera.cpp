@@ -128,12 +128,13 @@ void Camera::RenderController()
 	if (ImGui::CollapsingHeader("Camera", &m_isFolded, ImGuiTreeNodeFlags_DefaultOpen))  // default open
 	{
 		static int selected_option = 0;
-		if (ImGui::RadioButton("Perspective Projection", &selected_option, 0))
-		{
-			m_cameraProjMethod = static_cast<CameraProjMethod>(selected_option);
-		}
+		bool isChanged = false;
+
+		isChanged |= ImGui::RadioButton("Perspective Projection", &selected_option, 0);
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Orthogonal Projection", &selected_option, 1))
+		isChanged |= ImGui::RadioButton("Orthogonal Projection", &selected_option, 1);
+
+		if (isChanged)
 		{
 			m_cameraProjMethod = static_cast<CameraProjMethod>(selected_option);
 		}

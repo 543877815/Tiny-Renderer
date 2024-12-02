@@ -21,18 +21,12 @@ void main()
 	{
 		discard;
 	}
-	fragColor = vec4(vColor.rgb * vColor.a * g, vColor.a * g);
 
-
-	//if (showGaussian == 1)
-	//{
-	//	fragColor = vec4(vColor);
-	//}
-	//else if (showHotspots == 1)
-	//{
-	//	fragColor = vec4(0.005f, 0.0f, 0.0f, 0.005f);
-	//}
-	//else {
-	//	fragColor = vec4(vColor.rgb * vColor.a * g, vColor.a * g);
-	//}
+	if (showGaussian == 1)
+	{
+		fragColor = vec4(vColor);
+	}
+	else {
+		fragColor = vec4(vColor.rgb * vColor.a * g, vColor.a * g);
+	}
 }

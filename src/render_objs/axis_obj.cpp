@@ -11,7 +11,7 @@ AxisObj::AxisObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 
 void AxisObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
-	auto projection = std::any_cast<glm::mat4>(uniform.at("projection"));
+	auto projection = std::any_cast<glm::mat4>(uniform.at("perspective_projection"));
 	auto view = std::any_cast<glm::mat4>(uniform.at("view"));
 	auto model = std::any_cast<glm::mat4>(uniform.at("model"));
 

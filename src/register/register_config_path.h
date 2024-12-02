@@ -17,9 +17,9 @@ public:
 	static std::vector<std::string> GetConfigPath(Operator op);
 
 private:
-	static inline int m_currentIdx = 0;
+	static inline size_t m_currentIdx = 0;
 	static inline std::vector<std::string> m_configPaths{
-		"./config/ply.json",
+		"./config/gs_ply.json",
 		"./config/box.json",
 		"./config/ellipsoid.json",
 		"./config/map.json",

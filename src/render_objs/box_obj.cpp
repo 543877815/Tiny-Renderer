@@ -43,8 +43,8 @@ void BoxObj::SetUpTexture(int num)
 	m_textureIdxes.emplace_back(idx2);
 
 	m_shader->Use();
-	m_shader->SetInt("texture1", idx1);
-	m_shader->SetInt("texture2", idx2);
+	m_shader->SetInt("texture1", static_cast<int>(idx1));
+	m_shader->SetInt("texture2", static_cast<int>(idx2));
 }
 
 void BoxObj::SetUpData()

@@ -98,7 +98,6 @@ public:
 	glm::vec2 GetTanFov() { return glm::vec2(m_width / m_fx * 0.5f, m_height / m_fy * 0.5f); }
 	glm::vec2 GetNearFar() { return glm::vec2(m_near, m_far); }
 	const glm::mat4& GetProjection() const { return m_projection; }
-
 private:
 	float m_fy = 1164.66f;  // focal_y
 	float m_fx = 1159.58f; // focal_x 
@@ -131,14 +130,15 @@ protected:
 	template <typename T> void RunSortUpdateDepth(std::vector<T>& vertices);
 	template <typename T> void CountingSort(std::vector<T>& vertices);
 	template <typename T> void QuickSort(std::vector<T>& vertices);
-	void ImGuiCallback();
+	template <typename T> void RadixSort(std::vector<T>& vertices);
+	void ImGuiCallback() override;
 
 protected:
 	uint32_t m_vertexCount = 0, m_vertexLength = 0;
 	int m_texture_width = 0, m_textureHeight = 0;
 	MODEL_TYPE m_type;
 	SORT_METHOD m_sortMethod = COUNTING_SORT;
-	size_t m_textureIdx = -1;
+	int m_textureIdx = -1;
 	SORT_ORDER m_sortOrder = DESCENDING;
 	std::vector<uint32_t> m_depthIndex{};
 	std::vector<uint32_t> m_textureData{};
@@ -159,7 +159,7 @@ private:
 	unsigned int encodeMorton3(unsigned int x, unsigned int y, unsigned int z);
 };
 
-class PlyObj : public Base3DGSObj {
+class GSPlyObj : public Base3DGSObj {
 public:
 	struct PlyProperty {
 		std::string type;
@@ -178,7 +178,7 @@ public:
 		void UpdateVerticesOffset(std::string property, std::pair<size_t, size_t>& startEnd);
 	};
 
-	PlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
+	GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void SetUpShader(const char* vertexShader, const char* fragmentShader);
 	virtual void Draw();
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
@@ -238,6 +238,10 @@ inline void Base3DGSObj::RunSortUpdateDepth(std::vector<T>& vertices)
 	else if (m_sortMethod == QUICK_SORT) {
 		QuickSort(vertices);
 	}
+	else if (m_sortMethod == RADIX_SORT)
+	{
+		RadixSort(vertices);
+	}
 	m_depthIndexVBO->Update(m_depthIndex);
 }
 
@@ -253,7 +257,7 @@ inline void Base3DGSObj::CountingSort(std::vector<T>& vertices)
 
 	std::vector<float>depth_f(m_vertexCount, 0);
 
-	for (size_t i = 0; i < m_vertexCount; i++) {
+	for (uint32_t i = 0; i < m_vertexCount; i++) {
 		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
 		auto& pos = vertices[idx].position;
 		depth_f[i] = (modelViewProjMatrix[0][2] * pos.x +
@@ -265,10 +269,10 @@ inline void Base3DGSObj::CountingSort(std::vector<T>& vertices)
 	}
 
 	uint32_t sortBit = 256 * 256;
-	size_t count = sortBit + 1; // +1 防止越界
+	uint32_t count = sortBit + 1; // +1 防止越界
 	if (m_counts.empty()) m_counts.resize(count);
 	std::memset(m_counts.data(), 0, sizeof(uint32_t) * m_counts.size());
-	for (size_t i = 0; i < m_vertexCount; i++)
+	for (uint32_t i = 0; i < m_vertexCount; i++)
 	{
 		m_sizeList[i] = (maxDepth - depth_f[i]) / (maxDepth - minDepth + 0.01) * sortBit;
 		m_counts[m_sizeList[i]]++;
@@ -276,12 +280,12 @@ inline void Base3DGSObj::CountingSort(std::vector<T>& vertices)
 
 	if (m_starts.empty()) m_starts.resize(count);
 	std::memset(m_starts.data(), 0, sizeof(uint32_t) * m_starts.size());
-	for (size_t i = 1; i < sortBit; i++) {
+	for (uint32_t i = 1; i < sortBit; i++) {
 		m_starts[i] = m_starts[i - 1] + m_counts[i - 1];
 	}
 
 	std::memset(m_depthIndex.data(), 0, sizeof(uint32_t) * m_depthIndex.size());
-	for (size_t i = 0; i < m_vertexCount; i++) {
+	for (uint32_t i = 0; i < m_vertexCount; i++) {
 		m_depthIndex[m_starts[m_sizeList[i]]++] = i;
 	}
 };
@@ -321,6 +325,80 @@ inline void Base3DGSObj::QuickSort(std::vector<T>& m_vertices)
 	for (size_t i = 0; i < m_vertexCount; i++) {
 		auto [_idx, _depth] = m_index2depth[i];
 		m_depthIndex[i] = _idx;
+	}
+};
+
+// to optimize
+template<typename T>
+inline void Base3DGSObj::RadixSort(std::vector<T>& m_vertices)
+{
+	auto instance = Camera::GetInstance();
+	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+
+	const uint32_t MAX_DEPTH = UINT32_MAX;
+	float minDepth = FLT_MAX;
+	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth_ui1(m_vertexCount, { 0, 0 });
+	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth_ui2(m_vertexCount, { 0, 0 });
+	std::vector<float> depth_f(m_vertexCount, 0);
+
+	for (size_t i = 0; i < m_vertexCount; i++) {
+		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
+		auto& pos = m_vertices[idx].position;
+		depth_f[i] = (modelViewProjMatrix[0][2] * pos.x +
+			modelViewProjMatrix[1][2] * pos.y +
+			modelViewProjMatrix[2][2] * pos.z);
+		minDepth = (std::min)(minDepth, depth_f[i]);
+	}
+
+	for (size_t i = 0; i < m_vertexCount; i++)
+	{
+		m_index2depth_ui1[i] = { static_cast<uint32_t>(MAX_DEPTH - (depth_f[i] - minDepth) / 1000.0f * static_cast<float>(MAX_DEPTH)) , i };
+	}
+
+	constexpr const uint32_t bit = 32;
+	constexpr const uint32_t bitPerIter = 8;
+	uint32_t totalIter = bit / bitPerIter + 1;
+	uint32_t bucket_size = pow(2, bitPerIter);
+	for (size_t iter = 0; iter < totalIter; iter++)
+	{
+		auto& source = (iter % 2 == 0) ? m_index2depth_ui1 : m_index2depth_ui2;
+		auto& dest = (iter % 2 == 0) ? m_index2depth_ui2 : m_index2depth_ui1;
+		uint32_t shift = iter * bitPerIter;
+
+		// hist
+		std::vector<std::vector<std::pair<uint32_t, uint32_t>>> hist(bucket_size);
+		for (auto elem : source)
+		{
+			uint32_t bucket_id = (elem.first >> shift) & (bucket_size - 1);
+			hist[bucket_id].emplace_back(elem);
+		}
+
+		// presum
+		std::vector<uint32_t> presum(bucket_size, 0);
+		std::vector<uint32_t> summation(bucket_size, 0);
+		for (uint32_t id = 0; id < bucket_size; id++)
+		{
+			if (id == 0)
+				presum[id] = hist[id].size();
+			else
+				presum[id] = presum[id - 1] + hist[id].size();
+			summation[id] = hist[id].size();
+		}
+
+		// sort
+		for (auto elem : source)
+		{
+			uint32_t bucket_id = (elem.first >> shift) & (bucket_size - 1);
+			dest[presum[bucket_id] - 1] = hist[bucket_id][summation[bucket_id] - 1];
+			presum[bucket_id]--;
+			summation[bucket_id]--;
+		}
+	}
+
+	auto & final = (totalIter % 2 == 0) ? m_index2depth_ui1 : m_index2depth_ui2;
+	for (uint32_t i = 0; i < m_vertexCount; i++)
+	{
+		m_depthIndex[i] = final[i].second;
 	}
 };
 

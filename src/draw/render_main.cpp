@@ -29,6 +29,7 @@ RenderMain::RenderMain()
 	m_renderObjMgr = RenderObjectManager::GetInstance();
 	m_imguiMgr = ImGuiManager::GetInstance(m_window);
 	m_uniformSetter = std::make_unique<Registry::UniformSetter>();
+	m_fbo = std::make_shared<Renderable::GSFrameBufferObj>("./shader/gs_fbo_vs.glsl", "./shader/gs_fbo_fs.glsl"); // to be packed
 }
 
 void RenderMain::SetupRenderObjs(std::vector<std::string>& configPaths)
@@ -41,6 +42,7 @@ void RenderMain::SetupRenderObjs(std::vector<std::string>& configPaths)
 
 void RenderMain::PrepareDraw()
 {
+	m_fbo->BindFBO();
 	float* clearColor = m_imguiMgr->GetClearColor();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
@@ -58,7 +60,6 @@ void RenderMain::PrepareDraw()
 
 void RenderMain::SetUpDrawUniform()
 {
-	//m_drawUniforms.clear();
 	for (const auto& uniform : m_renderObjUniforms) {
 		if (m_uniformSetter->Contain(uniform)) {
 			m_uniformSetter->GetFunc(uniform)(m_drawUniforms);
@@ -91,9 +92,12 @@ void RenderMain::Draw()
 			};
 		functions.emplace_back(callback);
 	}
-
+	m_fbo->DrawObj(m_drawUniforms);
+	auto callback = [&]() {
+		m_fbo->ImGuiCallback();
+		};
+	functions.emplace_back(callback);
 	m_imguiMgr->Render(functions);
-
 }
 
 void RenderMain::FinishDraw()

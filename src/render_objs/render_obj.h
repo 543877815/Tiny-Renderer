@@ -54,7 +54,7 @@ protected:
 	uint32_t m_VBO = 0;
 	uint32_t m_EBO = 0;
 	std::unique_ptr<Shader> m_shader = nullptr;
-	std::unique_ptr<Texture> m_textures = nullptr;
+	std::shared_ptr<Texture> m_textures = nullptr;
 	std::vector<size_t> m_textureIdxes{};
 	virtual void SetUpShader(const std::string& vertexShader, const std::string& fragmentShader);
 	virtual void SetUpShader() {};
@@ -192,9 +192,8 @@ inline void RenderObjectNaive<vT, iT>::Draw()
 	else
 	{
 		glDrawArrays(m_primitive, 0, static_cast<GLsizei>(m_vertexCount));
-		glBindVertexArray(0);
 	}
-
+	glBindVertexArray(0);
 }
 RENDERABLE_END
 

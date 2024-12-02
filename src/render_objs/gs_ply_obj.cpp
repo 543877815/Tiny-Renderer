@@ -90,7 +90,7 @@ void GetSigma(std::vector<T>& scale, std::vector<T>& rotation, std::vector<T>& s
 	sigma[5] = M[2] * M[2] + M[5] * M[5] + M[8] * M[8];
 }
 
-void PlyObj::PlyHeader::UpdateVerticesOffset(std::string property, std::pair<size_t, size_t>& start_end)
+void GSPlyObj::PlyHeader::UpdateVerticesOffset(std::string property, std::pair<size_t, size_t>& start_end)
 {
 	if (verticePropertiesOffset.find(property) == verticePropertiesOffset.end()) {
 		verticePropertiesOrder.emplace_back(property);
@@ -101,7 +101,7 @@ void PlyObj::PlyHeader::UpdateVerticesOffset(std::string property, std::pair<siz
 	}
 }
 
-PlyObj::PlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
+GSPlyObj::GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	auto configPtr = std::static_pointer_cast<Parser::RenderObjConfig3DGS>(baseConfigPtr);
 	SetUpShader(configPtr->vertexShader.c_str(), configPtr->fragmentShader.c_str());
@@ -115,19 +115,19 @@ PlyObj::PlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 	SetUpData();
 }
 
-void PlyObj::SetUpShader(const char* vertex_shader, const char* fragmentShader)
+void GSPlyObj::SetUpShader(const char* vertex_shader, const char* fragmentShader)
 {
 	m_shader = std::make_unique<Shader>(vertex_shader, fragmentShader);
 }
 
-void PlyObj::Draw()
+void GSPlyObj::Draw()
 {
 	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, m_vertexCount);
 }
 
-void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
+void GSPlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
-	glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("projection"));
+	glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("perspective_projection"));
 	glm::mat4 view = std::any_cast<glm::mat4>(uniform.at("view"));
 	glm::mat4 model = std::any_cast<glm::mat4>(uniform.at("model"));
 	glm::vec2 focal = std::any_cast<glm::vec2>(uniform.at("focal"));
@@ -141,7 +141,7 @@ void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 
 	m_shader->Use();
 	m_renderVAO->Bind();
-	m_gaussian_texture->BindTexture(0);
+	m_gaussian_texture->BindTexture(m_textureIdx);
 	m_shader->SetMat4("projection", projection);
 	m_shader->SetMat4("view", view);
 	m_shader->SetMat4("model", model);
@@ -151,7 +151,7 @@ void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetVec2("tanFov", tanFov);
 	m_shader->SetVec2("nearFar", nearFar);
 	m_shader->SetVec2("nearFar", 1.0f, 2.0f);
-	m_shader->SetInt("u_texture", static_cast<int>(m_textureIdx));
+	m_shader->SetInt("u_texture", m_textureIdx);
 	m_shader->SetInt("sphericalHarmonicsDegree", 3);
 	m_shader->SetInt("showGaussian", 3);
 	Draw();
@@ -159,7 +159,7 @@ void PlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 
 }
 
-void PlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
+void GSPlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
 {
 	std::string line;
 	bool headerEnd = false;
@@ -241,7 +241,7 @@ void PlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
 	}
 }
 
-void PlyObj::LoadVertices(std::ifstream& file)
+void GSPlyObj::LoadVertices(std::ifstream& file)
 {
 	static_assert(sizeof(PlyVertexStorage) == 62 * sizeof(float), "");
 	for (auto i = 0; i < m_header.verticeNum; i++) {
@@ -289,7 +289,7 @@ void PlyObj::LoadVertices(std::ifstream& file)
 	file.close();
 }
 
-void PlyObj::GenerateTextureData()
+void GSPlyObj::GenerateTextureData()
 {
 	for (size_t i = 0; i < m_vertexCount; i++) {
 		size_t idx = m_indices[i];
@@ -313,7 +313,7 @@ void PlyObj::GenerateTextureData()
 	}
 }
 
-void PlyObj::GetSigmaFloat32(glm::vec4& rotation, glm::vec3& scale, std::vector<float>& sigmaFloat32)
+void GSPlyObj::GetSigmaFloat32(glm::vec4& rotation, glm::vec3& scale, std::vector<float>& sigmaFloat32)
 {
 	std::vector<double> rotation_d{
 		static_cast<double>(rotation[0]),
@@ -336,7 +336,7 @@ void PlyObj::GetSigmaFloat32(glm::vec4& rotation, glm::vec3& scale, std::vector<
 	}
 }
 
-void PlyObj::SetUpAttribute()
+void GSPlyObj::SetUpAttribute()
 {
 	m_vertexCount = m_header.verticeNum;
 	m_vertices.resize(m_vertexCount);
@@ -410,12 +410,13 @@ void Base3DGSObj::ImGuiCallback()
 
 		static int selected_option = 0;
 		ImGui::Text("Sorting Method");
-		if (ImGui::RadioButton("Countint Sort", &selected_option, 0))
-		{
-			m_sortMethod = static_cast<SORT_METHOD>(selected_option);
-		}
+		bool isChanged = false;
+		isChanged |= ImGui::RadioButton("Countint Sort", &selected_option, 0);
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Quick Sort", &selected_option, 1))
+		isChanged |= ImGui::RadioButton("Quick Sort", &selected_option, 1);
+		ImGui::SameLine();
+		isChanged |= ImGui::RadioButton("Radix Sort", &selected_option, 2);
+		if (isChanged)
 		{
 			m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 		}

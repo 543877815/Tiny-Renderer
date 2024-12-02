@@ -8,6 +8,7 @@
 #include "../render_objs/rectangle2d_obj.h"
 #include "../render_objs/map_obj.h"
 #include "../render_objs/gs_ply_obj.h"
+#include "../render_objs/gs_framebuffer_obj.h"
 #include "../parser/config_parser.h"
 #include "./common.h"
 #include <functional>
@@ -28,7 +29,8 @@ private:
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateSphere(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateRectangle2D(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateMap(std::shared_ptr<Parser::RenderObjConfigBase>);
-	static std::shared_ptr<Renderable::RenderObjectBase> CreatePly(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateGSPly(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateGSFrameBuffer(std::shared_ptr<Parser::RenderObjConfigBase>);
 
 	static std::unordered_map<std::string, CreateRenderObjFuncPtr> registerObj;
 };

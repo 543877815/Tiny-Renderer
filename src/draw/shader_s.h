@@ -31,5 +31,5 @@ public:
 	GLuint GetAttribLocation(const std::string& name) const;
 private:
 	// utility function for checking shader compilation/linking errors.
-	void CheckCompileErrors(GLuint shader, std::string type);
+	void CheckCompileErrors(const char* path, GLuint shader, std::string type);
 };
