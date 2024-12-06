@@ -137,7 +137,7 @@ void GSPlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	glm::vec2 nearFar = std::any_cast<glm::vec2>(uniform.at("nearFar"));
 
 	SetUpGLStatus();
-	RunSortUpdateDepth(m_vertices);
+	RunSortUpdateDepth();
 
 	m_shader->Use();
 	m_renderVAO->Bind();
@@ -150,14 +150,46 @@ void GSPlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 	m_shader->SetVec3("camPos", camPos);
 	m_shader->SetVec2("tanFov", tanFov);
 	m_shader->SetVec2("nearFar", nearFar);
-	m_shader->SetVec2("nearFar", 1.0f, 2.0f);
 	m_shader->SetInt("u_texture", m_textureIdx);
-	m_shader->SetInt("sphericalHarmonicsDegree", 3);
+	m_shader->SetInt("sphericalHarmonicsDegree", m_sphericalHarmonicsDegree);
 	m_shader->SetInt("showGaussian", 3);
 	Draw();
 	m_renderVAO->Unbind();
 
 }
+
+void GSPlyObj::ImGuiCallback()
+{
+	ImGui::SliderInt("SphericalHarmonicsDegree", &m_sphericalHarmonicsDegree, 1, 3);
+	static int selected_option = 0;
+	ImGui::Text("Sorting Method");
+	bool isChanged = false;
+	if (ImGui::RadioButton("Countint Sort (CPU)", &selected_option, 0))
+	{
+		m_sorter = std::make_shared<CountingSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+	}
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Quick Sort (CPU)", &selected_option, 1))
+	{
+		m_sorter = std::make_shared<QuickSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+	}
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Radix Sort (CPU)", &selected_option, 2))
+	{
+		m_sorter = std::make_shared<RadixSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+	}
+	m_sortMethod = static_cast<SORT_METHOD>(selected_option);
+	Base3DGSObj::ImGuiCallback();
+}
+
+void GSPlyObj::RunSortUpdateDepth()
+{
+	m_sorter->Sort(m_vertices, m_indices, m_depthIndex);
+
+	m_depthIndexVBO->Update(m_depthIndex);
+}
+
+
 
 void GSPlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
 {
@@ -340,6 +372,7 @@ void GSPlyObj::SetUpAttribute()
 {
 	m_vertexCount = m_header.verticeNum;
 	m_vertices.resize(m_vertexCount);
+	m_sorter = std::make_shared<CountingSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
 	Base3DGSObj::SetUpAttribute();
 }
 
@@ -393,7 +426,6 @@ void Base3DGSObj::SetUpAttribute()
 	m_gaussian_texture = std::make_shared<Texture>(1);
 	m_depthIndex.resize(m_vertexCount);
 	m_indices.resize(m_vertexCount);
-	m_sizeList.resize(m_vertexCount);
 }
 
 void Base3DGSObj::ImGuiCallback()
@@ -406,19 +438,6 @@ void Base3DGSObj::ImGuiCallback()
 		if (ImGui::SliderInt("vertexCount", &vertexCount, 0, maxVertexCount))
 		{
 			m_vertexCount = static_cast<uint32_t>(vertexCount);
-		}
-
-		static int selected_option = 0;
-		ImGui::Text("Sorting Method");
-		bool isChanged = false;
-		isChanged |= ImGui::RadioButton("Countint Sort", &selected_option, 0);
-		ImGui::SameLine();
-		isChanged |= ImGui::RadioButton("Quick Sort", &selected_option, 1);
-		ImGui::SameLine();
-		isChanged |= ImGui::RadioButton("Radix Sort", &selected_option, 2);
-		if (isChanged)
-		{
-			m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 		}
 	}
 }

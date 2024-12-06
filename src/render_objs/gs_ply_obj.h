@@ -84,6 +84,224 @@ enum MODEL_TYPE : uint32_t
 	PLY
 };
 
+template <typename T>
+class BaseSorter {
+public:
+	BaseSorter() {}
+	BaseSorter(uint32_t vertexCount, SORT_ORDER sortOrder) :m_vertexCount(vertexCount), m_sortOrder(sortOrder) {}
+	virtual void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex) = 0;
+
+protected:
+	uint32_t m_vertexCount = 0;
+	SORT_ORDER m_sortOrder = DESCENDING;
+};
+
+template <typename T>
+class QuickSortCPU : public BaseSorter<T> {
+public:
+	QuickSortCPU(uint32_t vertexCount, SORT_ORDER sortOrder)
+	{
+		this->m_vertexCount = vertexCount;
+		this->m_sortOrder = sortOrder;
+		m_index2depth.resize(vertexCount);
+	}
+
+	void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex) override
+	{
+		auto instance = Camera::GetInstance();
+		auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+
+		m_index2depth.resize(this->m_vertexCount);
+		std::memset(m_index2depth.data(), 0, sizeof(float) * m_index2depth.size());
+
+		for (size_t i = 0; i < this->m_vertexCount; i++) {
+			size_t idx = indices[i];
+
+			m_index2depth[i] = std::make_pair(i,
+				modelViewProjMatrix[0][2] * vertices[idx].position.x +
+				modelViewProjMatrix[1][2] * vertices[idx].position.y +
+				modelViewProjMatrix[2][2] * vertices[idx].position.z);
+		}
+
+		if (this->m_sortOrder == DESCENDING) {
+			std::sort(m_index2depth.begin(), m_index2depth.end(),
+				[&](std::pair<uint32_t, float>& a, std::pair<uint32_t, float>& b) {
+					return a.second > b.second;
+				});
+		}
+		else {
+			std::sort(m_index2depth.begin(), m_index2depth.end(),
+				[&](std::pair<uint32_t, float>& a, std::pair<uint32_t, float>& b) {
+					return a.second < b.second;
+				});
+		}
+
+		for (size_t i = 0; i < this->m_vertexCount; i++) {
+			auto [idx, _] = m_index2depth[i];
+			depthIndex[i] = idx;
+		}
+	}
+private:
+	std::vector<std::pair<uint32_t, float>> m_index2depth{};
+};
+
+template <typename T>
+class RadixSortCPU : public BaseSorter<T> {
+public:
+	RadixSortCPU(uint32_t vertexCount, SORT_ORDER sortOrder)
+	{
+		this->m_vertexCount = vertexCount;
+		this->m_sortOrder = sortOrder;
+		m_totalIter = (m_bit + m_bitPerIter - 1) / m_bitPerIter;
+		m_bucketSize = 1 << m_bitPerIter;
+		m_index2depth1.resize(vertexCount);
+		m_index2depth2.resize(vertexCount);
+		m_presum.resize(m_bucketSize);
+		m_summation.resize(m_bucketSize);
+		m_histogram.resize(m_bucketSize);
+	}
+
+	void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex) override
+	{
+		auto instance = Camera::GetInstance();
+		float plane_far = instance->GetFar();
+		float half_far = plane_far / 2.0f;
+		auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+		const uint32_t MAX_DEPTH = UINT32_MAX;
+		for (size_t i = 0; i < this->m_vertexCount; i++) {
+			size_t idx = indices[i];
+			auto& pos = vertices[idx].position;
+			float depth = (modelViewProjMatrix[0][2] * pos.x +
+				modelViewProjMatrix[1][2] * pos.y +
+				modelViewProjMatrix[2][2] * pos.z);
+			m_index2depth1[i] = { i, MAX_DEPTH - static_cast<uint32_t>((depth - half_far) / plane_far * MAX_DEPTH) };
+		}
+
+		for (size_t iter = 0; iter < m_totalIter; iter++)
+		{
+			std::fill(m_histogram.begin(), m_histogram.end(), std::vector<std::pair<uint32_t, uint32_t>>{});
+			std::fill(m_presum.begin(), m_presum.end(), 0);
+			std::fill(m_summation.begin(), m_summation.end(), 0);
+			auto& source = (iter % 2 == 0) ? m_index2depth1 : m_index2depth2;
+			auto& dest = (iter % 2 == 0) ? m_index2depth2 : m_index2depth1;
+			uint32_t shift = iter * m_bitPerIter;
+
+			// histogram
+			for (auto elem : source)
+			{
+				auto& [_, depth] = elem;
+				uint32_t bucketId = (depth >> shift) & (m_bucketSize - 1);
+				m_histogram[bucketId].emplace_back(elem);
+			}
+
+			// presum
+			for (uint32_t id = 0; id < m_bucketSize; id++)
+			{
+				if (id == 0)
+					m_presum[id] = m_histogram[id].size();
+				else
+					m_presum[id] = m_presum[id - 1] + m_histogram[id].size();
+				m_summation[id] = m_histogram[id].size();
+			}
+
+			// sort
+			for (auto elem : source)
+			{
+				auto& [_, depth] = elem;
+				uint32_t bucketId = (depth >> shift) & (m_bucketSize - 1);
+				dest[m_presum[bucketId] - 1] = m_histogram[bucketId][m_summation[bucketId] - 1];
+				m_presum[bucketId]--;
+				m_summation[bucketId]--;
+			}
+		}
+
+		auto& finalBuffer = (m_totalIter % 2 == 0) ? m_index2depth1 : m_index2depth2;
+		for (uint32_t i = 0; i < this->m_vertexCount; i++)
+		{
+			auto [idx, _] = finalBuffer[i];
+			depthIndex[i] = idx;
+		}
+	}
+
+private:
+	const uint32_t m_bit = 32;
+	const uint32_t m_bitPerIter = 8;
+	uint32_t m_bucketSize = 0;
+	uint32_t m_totalIter = 0;
+	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth1{};
+	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth2{};
+	std::vector<float> m_depth{};
+	std::vector<std::vector<std::pair<uint32_t, uint32_t>>> m_histogram{};
+	std::vector<uint32_t> m_presum{};
+	std::vector<uint32_t> m_summation{};
+};
+
+template <typename T>
+class CountingSortCPU : public BaseSorter<T> {
+public:
+	CountingSortCPU(uint32_t vertexCount, SORT_ORDER sortOrder)
+	{
+		this->m_vertexCount = vertexCount;
+		this->m_sortOrder = sortOrder;
+		m_sizeList.resize(vertexCount);
+		std::memset(m_sizeList.data(), 0, sizeof(int32_t) * vertexCount);
+		m_depth.resize(vertexCount);
+		std::memset(m_depth.data(), 0, sizeof(float) * vertexCount);
+	}
+
+	void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex)override
+	{
+		auto instance = Camera::GetInstance();
+		auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+		float maxDepth = FLT_MIN;
+		float minDepth = FLT_MAX;
+
+		std::memset(m_sizeList.data(), 0, sizeof(uint32_t) * m_sizeList.size());
+		for (uint32_t i = 0; i < this->m_vertexCount; i++) {
+			size_t idx = indices[i];
+			auto& pos = vertices[idx].position;
+			m_depth[i] = (modelViewProjMatrix[0][2] * pos.x +
+				modelViewProjMatrix[1][2] * pos.y +
+				modelViewProjMatrix[2][2] * pos.z);
+			maxDepth = (std::max)(maxDepth, m_depth[i]);
+			minDepth = (std::min)(minDepth, m_depth[i]);
+		}
+
+		uint32_t sortBit = 256 * 256;
+		uint32_t count = sortBit + 1; // +1 防止越界
+
+		if (m_counts.empty()) m_counts.resize(count);
+		std::memset(m_counts.data(), 0, sizeof(uint32_t) * m_counts.size());
+		for (uint32_t i = 0; i < this->m_vertexCount; i++)
+		{
+			m_sizeList[i] = (maxDepth - m_depth[i]) / (maxDepth - minDepth + 0.01) * sortBit;
+			m_counts[m_sizeList[i]]++;
+		}
+
+		if (m_starts.empty()) m_starts.resize(count);
+		std::memset(m_starts.data(), 0, sizeof(uint32_t) * m_starts.size());
+		for (uint32_t i = 1; i < sortBit; i++)
+		{
+			m_starts[i] = m_starts[i - 1] + m_counts[i - 1];
+		}
+
+		for (uint32_t i = 0; i < this->m_vertexCount; i++)
+		{
+			if (this->m_sortOrder == DESCENDING)
+				depthIndex[m_starts[m_sizeList[i]]++] = i;
+			else
+				depthIndex[m_starts[m_sizeList[i]]++] = this->m_vertexCount - i - 1;
+		}
+	}
+private:
+	std::vector<float> m_depth{};
+	std::vector<int32_t> m_sizeList{};
+	std::vector<uint32_t> m_counts{};
+	std::vector<uint32_t> m_starts{};
+};
+
+
+
 class Base3DGSCamera
 {
 public:
@@ -127,10 +345,6 @@ protected:
 	virtual void SetUpGLStatus();
 	void SetUpAttribute();
 	template <typename T> void PresortIndices(std::vector<T>& vertices);
-	template <typename T> void RunSortUpdateDepth(std::vector<T>& vertices);
-	template <typename T> void CountingSort(std::vector<T>& vertices);
-	template <typename T> void QuickSort(std::vector<T>& vertices);
-	template <typename T> void RadixSort(std::vector<T>& vertices);
 	void ImGuiCallback() override;
 
 protected:
@@ -142,11 +356,7 @@ protected:
 	SORT_ORDER m_sortOrder = DESCENDING;
 	std::vector<uint32_t> m_depthIndex{};
 	std::vector<uint32_t> m_textureData{};
-	std::vector<int32_t> m_sizeList{};
-	std::vector<uint32_t> m_counts{};
-	std::vector<uint32_t> m_starts{};
 	std::vector<uint32_t> m_indices{};
-	std::vector<std::pair<uint32_t, float>> m_index2depth{};
 	std::shared_ptr<Shader> m_shader = nullptr;
 	std::shared_ptr<Texture> m_gaussian_texture = nullptr;
 	std::shared_ptr<VertexArrayObject> m_renderVAO = nullptr;
@@ -182,7 +392,8 @@ public:
 	void SetUpShader(const char* vertexShader, const char* fragmentShader);
 	virtual void Draw();
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
-
+	void ImGuiCallback() override;
+	void RunSortUpdateDepth();
 private:
 	void LoadModelHeader(std::ifstream& file, PlyHeader& header);
 	void LoadVertices(std::ifstream& file);
@@ -192,8 +403,10 @@ private:
 
 private:
 	PlyHeader m_header;
+	int m_sphericalHarmonicsDegree = 3;
 	MODEL_TYPE m_type = MODEL_TYPE::PLY;
 	std::vector<PlyVertex3> m_vertices;
+	std::shared_ptr<BaseSorter<PlyVertex3>> m_sorter = nullptr;
 };
 
 template<typename T>
@@ -229,178 +442,4 @@ inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 		});
 }
 
-template<typename T>
-inline void Base3DGSObj::RunSortUpdateDepth(std::vector<T>& vertices)
-{
-	if (m_sortMethod == COUNTING_SORT) {
-		CountingSort(vertices);
-	}
-	else if (m_sortMethod == QUICK_SORT) {
-		QuickSort(vertices);
-	}
-	else if (m_sortMethod == RADIX_SORT)
-	{
-		RadixSort(vertices);
-	}
-	m_depthIndexVBO->Update(m_depthIndex);
-}
-
-template <typename T>
-inline void Base3DGSObj::CountingSort(std::vector<T>& vertices)
-{
-	auto instance = Camera::GetInstance();
-	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
-	float maxDepth = FLT_MIN;
-	float minDepth = FLT_MAX;
-	m_sizeList.resize(m_vertexCount);
-	std::memset(m_sizeList.data(), 0, sizeof(uint32_t) * m_sizeList.size());
-
-	std::vector<float>depth_f(m_vertexCount, 0);
-
-	for (uint32_t i = 0; i < m_vertexCount; i++) {
-		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
-		auto& pos = vertices[idx].position;
-		depth_f[i] = (modelViewProjMatrix[0][2] * pos.x +
-			modelViewProjMatrix[1][2] * pos.y +
-			modelViewProjMatrix[2][2] * pos.z);
-
-		maxDepth = (std::max)(maxDepth, depth_f[i]);
-		minDepth = (std::min)(minDepth, depth_f[i]);
-	}
-
-	uint32_t sortBit = 256 * 256;
-	uint32_t count = sortBit + 1; // +1 防止越界
-	if (m_counts.empty()) m_counts.resize(count);
-	std::memset(m_counts.data(), 0, sizeof(uint32_t) * m_counts.size());
-	for (uint32_t i = 0; i < m_vertexCount; i++)
-	{
-		m_sizeList[i] = (maxDepth - depth_f[i]) / (maxDepth - minDepth + 0.01) * sortBit;
-		m_counts[m_sizeList[i]]++;
-	}
-
-	if (m_starts.empty()) m_starts.resize(count);
-	std::memset(m_starts.data(), 0, sizeof(uint32_t) * m_starts.size());
-	for (uint32_t i = 1; i < sortBit; i++) {
-		m_starts[i] = m_starts[i - 1] + m_counts[i - 1];
-	}
-
-	std::memset(m_depthIndex.data(), 0, sizeof(uint32_t) * m_depthIndex.size());
-	for (uint32_t i = 0; i < m_vertexCount; i++) {
-		m_depthIndex[m_starts[m_sizeList[i]]++] = i;
-	}
-};
-
-template <typename T>
-inline void Base3DGSObj::QuickSort(std::vector<T>& m_vertices)
-{
-	auto instance = Camera::GetInstance();
-	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
-
-	m_index2depth.resize(m_vertexCount);
-	std::memset(m_index2depth.data(), 0, sizeof(float) * m_index2depth.size());
-
-	for (size_t i = 0; i < m_vertexCount; i++) {
-		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
-
-		m_index2depth[i] = std::make_pair(i,
-			modelViewProjMatrix[0][2] * m_vertices[idx].position.x +
-			modelViewProjMatrix[1][2] * m_vertices[idx].position.y +
-			modelViewProjMatrix[2][2] * m_vertices[idx].position.z);
-	}
-
-	if (m_sortOrder == DESCENDING) {
-		std::sort(m_index2depth.begin(), m_index2depth.end(),
-			[&](std::pair<uint32_t, float>& a, std::pair<uint32_t, float>& b) {
-				return a.second > b.second;
-			});
-	}
-	else {
-		std::sort(m_index2depth.begin(), m_index2depth.end(),
-			[&](std::pair<uint32_t, float>& a, std::pair<uint32_t, float>& b) {
-				return a.second < b.second;
-			});
-	}
-
-	std::memset(m_depthIndex.data(), 0, sizeof(uint32_t) * m_depthIndex.size());
-	for (size_t i = 0; i < m_vertexCount; i++) {
-		auto [_idx, _depth] = m_index2depth[i];
-		m_depthIndex[i] = _idx;
-	}
-};
-
-// to optimize
-template<typename T>
-inline void Base3DGSObj::RadixSort(std::vector<T>& m_vertices)
-{
-	auto instance = Camera::GetInstance();
-	auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
-
-	const uint32_t MAX_DEPTH = UINT32_MAX;
-	float minDepth = FLT_MAX;
-	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth_ui1(m_vertexCount, { 0, 0 });
-	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth_ui2(m_vertexCount, { 0, 0 });
-	std::vector<float> depth_f(m_vertexCount, 0);
-
-	for (size_t i = 0; i < m_vertexCount; i++) {
-		size_t idx = (m_type == SPLAT) ? i : m_indices[i];
-		auto& pos = m_vertices[idx].position;
-		depth_f[i] = (modelViewProjMatrix[0][2] * pos.x +
-			modelViewProjMatrix[1][2] * pos.y +
-			modelViewProjMatrix[2][2] * pos.z);
-		minDepth = (std::min)(minDepth, depth_f[i]);
-	}
-
-	for (size_t i = 0; i < m_vertexCount; i++)
-	{
-		m_index2depth_ui1[i] = { static_cast<uint32_t>(MAX_DEPTH - (depth_f[i] - minDepth) / 1000.0f * static_cast<float>(MAX_DEPTH)) , i };
-	}
-
-	constexpr const uint32_t bit = 32;
-	constexpr const uint32_t bitPerIter = 8;
-	uint32_t totalIter = bit / bitPerIter + 1;
-	uint32_t bucket_size = pow(2, bitPerIter);
-	for (size_t iter = 0; iter < totalIter; iter++)
-	{
-		auto& source = (iter % 2 == 0) ? m_index2depth_ui1 : m_index2depth_ui2;
-		auto& dest = (iter % 2 == 0) ? m_index2depth_ui2 : m_index2depth_ui1;
-		uint32_t shift = iter * bitPerIter;
-
-		// hist
-		std::vector<std::vector<std::pair<uint32_t, uint32_t>>> hist(bucket_size);
-		for (auto elem : source)
-		{
-			uint32_t bucket_id = (elem.first >> shift) & (bucket_size - 1);
-			hist[bucket_id].emplace_back(elem);
-		}
-
-		// presum
-		std::vector<uint32_t> presum(bucket_size, 0);
-		std::vector<uint32_t> summation(bucket_size, 0);
-		for (uint32_t id = 0; id < bucket_size; id++)
-		{
-			if (id == 0)
-				presum[id] = hist[id].size();
-			else
-				presum[id] = presum[id - 1] + hist[id].size();
-			summation[id] = hist[id].size();
-		}
-
-		// sort
-		for (auto elem : source)
-		{
-			uint32_t bucket_id = (elem.first >> shift) & (bucket_size - 1);
-			dest[presum[bucket_id] - 1] = hist[bucket_id][summation[bucket_id] - 1];
-			presum[bucket_id]--;
-			summation[bucket_id]--;
-		}
-	}
-
-	auto & final = (totalIter % 2 == 0) ? m_index2depth_ui1 : m_index2depth_ui2;
-	for (uint32_t i = 0; i < m_vertexCount; i++)
-	{
-		m_depthIndex[i] = final[i].second;
-	}
-};
-
 RENDERABLE_END
-
