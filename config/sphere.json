@@ -1,20 +1,20 @@
 [
   {
-    "config_type": "simple",
-    "object_info": {
+    "configType": "simple",
+    "objectInfo": {
       "type": "axis",
-      "vertex_shader": "./shader/axis_vs.glsl",
-      "fragment_shader": "./shader/axis_fs.glsl",
+      "vertexShader": "./shader/axis_vs.glsl",
+      "fragmentShader": "./shader/axis_fs.glsl",
       "uniform": [ "projection", "view", "model" ],
       "projection": "perspective"
     }
   },
   {
-    "config_type": "simple",
-    "object_info": {
+    "configType": "simple",
+    "objectInfo": {
       "type": "sphere",
-      "vertex_shader": "./shader/sphere_vs.glsl",
-      "fragment_shader": "./shader/sphere_fs.glsl",
+      "vertexShader": "./shader/sphere_vs.glsl",
+      "fragmentShader": "./shader/sphere_fs.glsl",
       "uniform": [ "projection", "view", "model" ],
       "projection": "perspective"
     }

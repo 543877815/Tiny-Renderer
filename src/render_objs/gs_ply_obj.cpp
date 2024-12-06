@@ -1,4 +1,5 @@
 #include "./gs_ply_obj.h"
+
 #include <mutex>
 RENDERABLE_BEGIN
 constexpr const float SH_C0 = 0.28209479177387814f;
@@ -105,6 +106,7 @@ GSPlyObj::GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 {
 	auto configPtr = std::static_pointer_cast<Parser::RenderObjConfig3DGS>(baseConfigPtr);
 	SetUpShader(configPtr->vertexShader.c_str(), configPtr->fragmentShader.c_str());
+	SetUpFbo(configPtr->fboVertexShader.c_str(), configPtr->fboFragmentShader.c_str());
 	std::ifstream file(configPtr->modelPath, std::ios::binary);
 	LoadModelHeader(file, m_header);
 	SetUpAttribute();
@@ -115,47 +117,40 @@ GSPlyObj::GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
 	SetUpData();
 }
 
-void GSPlyObj::SetUpShader(const char* vertex_shader, const char* fragmentShader)
-{
-	m_shader = std::make_unique<Shader>(vertex_shader, fragmentShader);
-}
-
-void GSPlyObj::Draw()
-{
-	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, m_vertexCount);
-}
-
 void GSPlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
-	glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("perspective_projection"));
-	glm::mat4 view = std::any_cast<glm::mat4>(uniform.at("view"));
-	glm::mat4 model = std::any_cast<glm::mat4>(uniform.at("model"));
-	glm::vec2 focal = std::any_cast<glm::vec2>(uniform.at("focal"));
-	glm::vec2 viewport = std::any_cast<glm::vec2>(uniform.at("viewport"));
-	glm::vec3 camPos = std::any_cast<glm::vec3>(uniform.at("camPos"));
-	glm::vec2 tanFov = std::any_cast<glm::vec2>(uniform.at("tanFov"));
-	glm::vec2 nearFar = std::any_cast<glm::vec2>(uniform.at("nearFar"));
-
-	SetUpGLStatus();
-	RunSortUpdateDepth();
-
-	m_shader->Use();
-	m_renderVAO->Bind();
-	m_gaussian_texture->BindTexture(m_textureIdx);
-	m_shader->SetMat4("projection", projection);
-	m_shader->SetMat4("view", view);
-	m_shader->SetMat4("model", model);
-	m_shader->SetVec2("focal", focal);
-	m_shader->SetVec2("viewport", viewport);
-	m_shader->SetVec3("camPos", camPos);
-	m_shader->SetVec2("tanFov", tanFov);
-	m_shader->SetVec2("nearFar", nearFar);
-	m_shader->SetInt("u_texture", m_textureIdx);
-	m_shader->SetInt("sphericalHarmonicsDegree", m_sphericalHarmonicsDegree);
-	m_shader->SetInt("showGaussian", 3);
-	Draw();
-	m_renderVAO->Unbind();
-
+	if (m_fbo)
+		m_fbo->PrepareDraw();
+	{
+		glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("perspective_projection"));
+		glm::mat4 view = std::any_cast<glm::mat4>(uniform.at("view"));
+		glm::mat4 model = std::any_cast<glm::mat4>(uniform.at("model"));
+		glm::vec2 focal = std::any_cast<glm::vec2>(uniform.at("focal"));
+		glm::vec2 viewport = std::any_cast<glm::vec2>(uniform.at("viewport"));
+		glm::vec3 camPos = std::any_cast<glm::vec3>(uniform.at("camPos"));
+		glm::vec2 tanFov = std::any_cast<glm::vec2>(uniform.at("tanFov"));
+		glm::vec2 nearFar = std::any_cast<glm::vec2>(uniform.at("nearFar"));
+		SetUpGLStatus();
+		RunSortUpdateDepth();
+		m_shader->Use();
+		m_renderVAO->Bind();
+		m_gaussian_texture->BindTexture(m_textureIdx);
+		m_shader->SetMat4("projection", projection);
+		m_shader->SetMat4("view", view);
+		m_shader->SetMat4("model", model);
+		m_shader->SetVec2("focal", focal);
+		m_shader->SetVec2("viewport", viewport);
+		m_shader->SetVec3("camPos", camPos);
+		m_shader->SetVec2("tanFov", tanFov);
+		m_shader->SetVec2("nearFar", nearFar);
+		m_shader->SetInt("u_texture", m_textureIdx);
+		m_shader->SetInt("sphericalHarmonicsDegree", m_sphericalHarmonicsDegree);
+		m_shader->SetInt("showGaussian", 3);
+		Draw();
+		m_renderVAO->Unbind();
+	}
+	if (m_fbo)
+		m_fbo->DrawObj(uniform);
 }
 
 void GSPlyObj::ImGuiCallback()
@@ -180,6 +175,8 @@ void GSPlyObj::ImGuiCallback()
 	}
 	m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	Base3DGSObj::ImGuiCallback();
+
+	m_fbo->ImGuiCallback();
 }
 
 void GSPlyObj::RunSortUpdateDepth()
@@ -188,8 +185,6 @@ void GSPlyObj::RunSortUpdateDepth()
 
 	m_depthIndexVBO->Update(m_depthIndex);
 }
-
-
 
 void GSPlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
 {
@@ -376,6 +371,16 @@ void GSPlyObj::SetUpAttribute()
 	Base3DGSObj::SetUpAttribute();
 }
 
+void GSPlyObj::SetUpFbo(const char* vertexShader, const char* fragmentShader)
+{
+	m_fbo = std::make_shared<GSFrameBufferObj>(vertexShader, fragmentShader);
+}
+
+void Base3DGSObj::SetUpShader(const char* vertexShader, const char* fragmentShader)
+{
+	m_shader = std::make_unique<Shader>(vertexShader, fragmentShader);
+}
+
 void Base3DGSObj::GenerateTexture()
 {
 	Texture::Params m_texture_parameters;
@@ -406,6 +411,11 @@ void Base3DGSObj::SetUpData()
 	m_renderVAO->Bind();
 	glVertexAttribDivisor(m_shader->GetAttribLocation("index"), 1);
 	m_renderVAO->Unbind();
+}
+
+void Base3DGSObj::Draw()
+{
+	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, m_vertexCount);
 }
 
 void Base3DGSObj::SetUpGLStatus()
@@ -441,7 +451,6 @@ void Base3DGSObj::ImGuiCallback()
 		}
 	}
 }
-
 
 RENDERABLE_END
 

@@ -9,6 +9,7 @@
 #include "common.h"
 #include "../draw/vertexbuffer.h"
 #include "../draw/camera.h"
+#include "./gs_framebuffer_obj.h"
 
 RENDERABLE_BEGIN
 enum SORT_ORDER : uint32_t
@@ -23,67 +24,6 @@ enum SORT_METHOD : uint32_t
 	QUICK_SORT,
 	RADIX_SORT
 };
-
-
-struct PlyVertexStorage {
-	glm::vec3 position;
-	glm::vec3 normal{ 0.0f, 0.0f, 0.0f };
-	float shs[48];
-	float opacity;
-	glm::vec3 scale;
-	glm::vec4 rotation;
-};
-
-struct PlyVertex3 {
-	glm::vec4 position;
-	glm::vec3 normal{ 0.0f, 0.0f, 0.0f };
-	float shs[48];
-	float opacity;
-	glm::vec3 scale;
-	glm::vec4 rotation;
-};
-
-struct PlyVertex2 {
-	glm::vec3 position;
-	float shs[27];
-	float opacity;
-	glm::vec4 rotation;
-	glm::vec3 scale;
-};
-
-struct PlyVertex1 {
-	glm::vec3 position;
-	float shs[12];
-	float opacity;
-	glm::vec4 rotation;
-	glm::vec3 scale;
-};
-
-struct PlyVertex0 {
-	glm::vec3 position;
-	float shs[3];
-	float opacity;
-	glm::vec4 rotation;
-	glm::vec3 scale;
-};
-
-struct SplatVertex {
-	glm::vec3 position;
-	glm::vec3 scale;
-	uint8_t shs[4];  // 0.5 * SH_C0 * v["f_dc"]
-	uint8_t rotation[4];
-};
-
-struct SplatBuffer {
-	uint8_t data[32];
-};
-
-enum MODEL_TYPE : uint32_t
-{
-	SPLAT,
-	PLY
-};
-
 template <typename T>
 class BaseSorter {
 public:
@@ -300,8 +240,6 @@ private:
 	std::vector<uint32_t> m_starts{};
 };
 
-
-
 class Base3DGSCamera
 {
 public:
@@ -316,6 +254,7 @@ public:
 	glm::vec2 GetTanFov() { return glm::vec2(m_width / m_fx * 0.5f, m_height / m_fy * 0.5f); }
 	glm::vec2 GetNearFar() { return glm::vec2(m_near, m_far); }
 	const glm::mat4& GetProjection() const { return m_projection; }
+
 private:
 	float m_fy = 1164.66f;  // focal_y
 	float m_fx = 1159.58f; // focal_x 
@@ -340,12 +279,19 @@ private:
 class Base3DGSObj : public RenderObjectBase
 {
 protected:
+	enum MODEL_TYPE : uint32_t
+	{
+		SPLAT,
+		PLY
+	};
+	void SetUpShader(const char* vertexShader, const char* fragmentShader);
 	virtual void GenerateTexture();
 	virtual void SetUpData();
 	virtual void SetUpGLStatus();
 	void SetUpAttribute();
 	template <typename T> void PresortIndices(std::vector<T>& vertices);
 	void ImGuiCallback() override;
+	void Draw();
 
 protected:
 	uint32_t m_vertexCount = 0, m_vertexLength = 0;
@@ -357,7 +303,7 @@ protected:
 	std::vector<uint32_t> m_depthIndex{};
 	std::vector<uint32_t> m_textureData{};
 	std::vector<uint32_t> m_indices{};
-	std::shared_ptr<Shader> m_shader = nullptr;
+	std::unique_ptr<Shader> m_shader = nullptr;
 	std::shared_ptr<Texture> m_gaussian_texture = nullptr;
 	std::shared_ptr<VertexArrayObject> m_renderVAO = nullptr;
 	std::shared_ptr<VertexBufferObject> m_rectangleVBO = nullptr;
@@ -371,6 +317,13 @@ private:
 
 class GSPlyObj : public Base3DGSObj {
 public:
+	GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
+	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
+	void ImGuiCallback() override;
+	void RunSortUpdateDepth();
+	void SetUpFbo(const char* vertexShader, const char* fragmentShader);
+
+private:
 	struct PlyProperty {
 		std::string type;
 		std::string name;
@@ -388,13 +341,48 @@ public:
 		void UpdateVerticesOffset(std::string property, std::pair<size_t, size_t>& startEnd);
 	};
 
-	GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
-	void SetUpShader(const char* vertexShader, const char* fragmentShader);
-	virtual void Draw();
-	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
-	void ImGuiCallback() override;
-	void RunSortUpdateDepth();
-private:
+	struct PlyVertexStorage {
+		glm::vec3 position;
+		glm::vec3 normal{ 0.0f, 0.0f, 0.0f };
+		float shs[48];
+		float opacity;
+		glm::vec3 scale;
+		glm::vec4 rotation;
+	};
+
+	struct PlyVertex3 {
+		glm::vec4 position;
+		glm::vec3 normal{ 0.0f, 0.0f, 0.0f };
+		float shs[48];
+		float opacity;
+		glm::vec3 scale;
+		glm::vec4 rotation;
+	};
+
+	struct PlyVertex2 {
+		glm::vec3 position;
+		float shs[27];
+		float opacity;
+		glm::vec4 rotation;
+		glm::vec3 scale;
+	};
+
+	struct PlyVertex1 {
+		glm::vec3 position;
+		float shs[12];
+		float opacity;
+		glm::vec4 rotation;
+		glm::vec3 scale;
+	};
+
+	struct PlyVertex0 {
+		glm::vec3 position;
+		float shs[3];
+		float opacity;
+		glm::vec4 rotation;
+		glm::vec3 scale;
+	};
+
 	void LoadModelHeader(std::ifstream& file, PlyHeader& header);
 	void LoadVertices(std::ifstream& file);
 	void GenerateTextureData();
@@ -407,6 +395,7 @@ private:
 	MODEL_TYPE m_type = MODEL_TYPE::PLY;
 	std::vector<PlyVertex3> m_vertices;
 	std::shared_ptr<BaseSorter<PlyVertex3>> m_sorter = nullptr;
+	std::shared_ptr<GSFrameBufferObj> m_fbo = nullptr;
 };
 
 template<typename T>
@@ -441,5 +430,29 @@ inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 		return morton[a] < morton[b];
 		});
 }
+
+//class GSSplatObj : public Base3DGSObj {
+//public:
+//public:
+//	GSSplatObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
+//	void SetUpShader(const char* vertexShader, const char* fragmentShader);
+//	void Draw();
+//	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
+//	void ImGuiCallback() override;
+//	void RunSortUpdateDepth();
+//
+//private:
+//	struct SplatVertex {
+//		glm::vec3 position;
+//		glm::vec3 scale;
+//		uint8_t shs[4];  // 0.5 * SH_C0 * v["f_dc"]
+//		uint8_t rotation[4];
+//	};
+//
+//	struct SplatBuffer {
+//		uint8_t data[32];
+//	};
+//};
+
 
 RENDERABLE_END

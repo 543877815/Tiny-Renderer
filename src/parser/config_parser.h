@@ -35,6 +35,8 @@ struct RenderObjConfig3DGS : public RenderObjConfigBase
 	std::string vertexShader = "";
 	std::string fragmentShader = "";
 	std::string modelPath = "";
+	std::string fboVertexShader = "";
+	std::string fboFragmentShader = "";
 	std::string projection = "perspective";
 };
 
@@ -54,11 +56,13 @@ struct RenderObjConfigAdvanced : public RenderObjConfigBase
 
 };
 
-static const char* configTypeKey = "config_type";
-static const char* objConfigKey = "object_info";
+static const char* configTypeKey = "configType";
+static const char* objConfigKey = "objectInfo";
 static const char* renderObjTypeKey = "type";
-static const char* vertexShaderKey = "vertex_shader";
+static const char* vertexShaderKey = "vertexShader";
 static const char* fragmentShaderKey = "fragmentShader";
+static const char* fboVertexShaderKey = "fboVertexShader";
+static const char* fboFragmentShaderKey = "fboFragmentShader";
 static const char* projectionTypeKey = "projection";
 static const char* modelPathKey = "model_path";
 static const char* uniformKey = "uniform";

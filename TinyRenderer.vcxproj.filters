@@ -117,10 +117,10 @@
     <None Include="shader\learningopengl\2.2.light_cube.fs.glsl">
       <Filter>shader\learningopengl</Filter>
     </None>
-    <None Include="shader\ply_fs.glsl">
+    <None Include="shader\gs_ply_fs.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\ply_vs.glsl">
+    <None Include="shader\gs_ply_vs.glsl">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\splat_fs.glsl">
@@ -129,11 +129,29 @@
     <None Include="shader\splat_vs.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="config\ply.json">
+    <None Include="config\gs_ply.json">
       <Filter>config</Filter>
     </None>
     <None Include="config\splat.json">
       <Filter>config</Filter>
+    </None>
+    <None Include="shader\gs_fbo_fs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\gs_fbo_vs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\presort_comp.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\single_radixsort_comp.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\multi_radixsort_histograms_comp.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\multi_radixsort_comp.glsl">
+      <Filter>shader</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -221,14 +239,29 @@
     <ClCompile Include="src\draw\render_main.cpp">
       <Filter>draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\render_objs\ply_obj.cpp">
+    <ClCompile Include="src\render_objs\gs_ply_obj.cpp">
+      <Filter>render_objs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\register\register_vbo.cpp">
+      <Filter>register</Filter>
+    </ClCompile>
+    <ClCompile Include="src\register\register_config_path.cpp">
+      <Filter>register</Filter>
+    </ClCompile>
+    <ClCompile Include="src\register\register_uniform_setter.cpp">
+      <Filter>register</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\utils.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_objs\gs_framebuffer_obj.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
     <ClCompile Include="src\render_objs\map_obj.cpp">
       <Filter>render_objs</Filter>
     </ClCompile>
-    <ClCompile Include="src\register\register_vbo.cpp">
-      <Filter>register</Filter>
+    <ClCompile Include="src\draw\framebuffer.cpp">
+      <Filter>draw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -236,9 +269,6 @@
       <Filter>render_objs</Filter>
     </ClInclude>
     <ClInclude Include="src\render_objs\basic_lighting.h">
-      <Filter>render_objs</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render_objs\map_obj.h">
       <Filter>render_objs</Filter>
     </ClInclude>
     <ClInclude Include="src\render_objs\rectangle2d_obj.h">
@@ -319,8 +349,26 @@
     <ClInclude Include="src\register\register_vbo.h">
       <Filter>register</Filter>
     </ClInclude>
-    <ClInclude Include="src\render_objs\ply_obj.h">
+    <ClInclude Include="src\render_objs\gs_ply_obj.h">
       <Filter>render_objs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\register\register_config_path.h">
+      <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\register\register_uniform_setter.h">
+      <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\register\register_vertex_info.h">
+      <Filter>register</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_objs\gs_framebuffer_obj.h">
+      <Filter>render_objs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_objs\map_obj.h">
+      <Filter>render_objs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\draw\framebuffer.h">
+      <Filter>draw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

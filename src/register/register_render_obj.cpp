@@ -14,7 +14,6 @@ DECLEAR_REGISTER_OBJECT(Rectangle2D);
 DECLEAR_REGISTER_OBJECT(Ellipsoid);
 DECLEAR_REGISTER_OBJECT(Map);
 DECLEAR_REGISTER_OBJECT(GSPly);
-DECLEAR_REGISTER_OBJECT(GSFrameBuffer);
 
 std::unordered_map<std::string, CreateRenderObjFuncPtr> RenderObjectFactory::registerObj = {
 		{"axis", CreateAxis},
@@ -24,7 +23,6 @@ std::unordered_map<std::string, CreateRenderObjFuncPtr> RenderObjectFactory::reg
 		{"ellipsoid", CreateEllipsoid},
 		{"map", CreateMap},
 		{"gs_ply", CreateGSPly},
-		{"gs_framebuffer", CreateGSFrameBuffer},
 };
 
 REGISTER_END

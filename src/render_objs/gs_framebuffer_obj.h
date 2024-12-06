@@ -29,7 +29,7 @@ public:
 	}
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	glm::ivec2& GetFboSize() { return m_fboSize; }
-	void BindFBO() { m_fbo->Bind(); }
+	void PrepareDraw();
 	void ImGuiCallback();
 private:
 	void SetUpTexture(int num) override { m_textures = std::make_unique<Texture>(num); }
@@ -46,7 +46,7 @@ private:
 	glm::ivec2 m_fboSize = { 0, 0 };
 	int m_textureIdx = -1;
 	Texture::Params m_texParams;
-	PRECISION m_precision = PRECISION::UINT8;
+	PRECISION m_precision = PRECISION::FP16;
 };
 
 RENDERABLE_END

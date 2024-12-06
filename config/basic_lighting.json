@@ -1,76 +1,26 @@
-//[
-//  {
-//    "object": "axis",
-//    "uniform": [ "projection", "view", "model" ],
-//    "vertex_shader": "./shader/axis_vs.glsl",
-//    "fragment_shader": "./shader/axis_fs.glsl"
-//  },
-//  {
-//    "object": "basic_light",
-//    "vbos": "cude",
-//    "uniform": [ "projection", "view", "model" ],
-//    "vertex_shader": "./shader/learningopengl/2.2.light_cube.vs.glsl",
-//    "fragment_shader": "./shader/learningopengl/2.2.light_cube.fs.glsl"
-//  }
-//] 
-
 [
   {
-    "object": "basic_light",
-    "programs": [
-      {
-        "vao": [ "cubeVAO" ],
-        "vbo": [ "cude" ],
-        "vertex_shader": "./shader/rect_vs.glsl",
-        "fragment_shader": "./shader/rect_fs.glsl",
-        "uniform": [ "projection", "view", "model" ]
-      }
-    ],
-    "VAOs": [
-      {
-        "name": "lightCubeVAO",
-        "vertex_info": [
-          {
-            "attriName": "aPos",
-            "attriLocation": 0,
-            "count": 3,
-            "type": "GL_FLOAT",
-            "normalized": "GL_FALSE",
-            "offset": 3,
-            "stride": 0
-          }
-        ]
-      }
-    ],
-    "VBOs": [
-      {
-        "vertex_data": [
-          0.5,
-          0.5,
-          0.0, // top right
-          0.5,
-          -0.5,
-          0.0, // bottom right
-          -0.5,
-          -0.5,
-          0.0, // bottom left
-          -0.5,
-          0.5,
-          0.0 // top left 
-        ],
-        "indices_data": [
-          0,
-          1,
-          3,
-          1,
-          2,
-          3
-        ]
-
-      }
-    ],
-    "vertex_shader": "./shader/rect_vs.glsl",
-    "fragment_shader": "./shader/rect_fs.glsl",
-    "uniform": [ "projection", "view", "model" ]
+    "configType": "advanced",
+    "objectInfo": {
+      "type": "basic_light",
+      "programs": [
+        {
+          "VAO": "cubeVAO",
+          "VBO": "cude",
+          "vertexInfo": "P3N3",
+          "vertexShader": "./shader/learningopengl/2.2.basic_lighting.vs.glsl",
+          "fragmentShader": "./shader/learningopengl/2.2.basic_lighting.fs.glsl",
+          "uniform": [ "projection", "view", "model" ]
+        },
+        {
+          "VAO": "lightVAO",
+          "VBO": "cube",
+          "vertexInfo": "P3",
+          "vertexShader": "./shader/learningopengl/2.2.light_cube.vs.glsl",
+          "fragmentShader": "./shader/learningopengl/2.2.light_cube.fs.glsl",
+          "uniform": [ "projection", "view", "model" ]
+        }
+      ]
+    }
   }
 ]

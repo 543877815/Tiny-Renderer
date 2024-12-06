@@ -141,7 +141,7 @@
     <None Include="config\map.json" />
     <None Include="config\rectangle2d.json" />
     <None Include="config\sphere.json" />
-    <None Include="config\ply.json" />
+    <None Include="config\gs_ply.json" />
     <None Include="config\splat.json" />
     <None Include="shader\aabb_fs.glsl" />
     <None Include="shader\aabb_vs.glsl" />
@@ -149,16 +149,22 @@
     <None Include="shader\axis_vs.glsl" />
     <None Include="shader\box_fs.glsl" />
     <None Include="shader\box_vs.glsl" />
+    <None Include="shader\gs_fbo_fs.glsl" />
+    <None Include="shader\gs_fbo_vs.glsl" />
     <None Include="shader\learningopengl\2.2.basic_lighting.vs.glsl" />
     <None Include="shader\learningopengl\2.2.basic_lighting.fs.glsl" />
     <None Include="shader\learningopengl\2.2.light_cube.vs.glsl" />
     <None Include="shader\learningopengl\2.2.light_cube.fs.glsl" />
     <None Include="shader\map_fs.glsl" />
     <None Include="shader\map_vs.glsl" />
-    <None Include="shader\ply_fs.glsl" />
-    <None Include="shader\ply_vs.glsl" />
+    <None Include="shader\gs_ply_fs.glsl" />
+    <None Include="shader\gs_ply_vs.glsl" />
+    <None Include="shader\multi_radixsort_comp.glsl" />
+    <None Include="shader\multi_radixsort_histograms_comp.glsl" />
+    <None Include="shader\presort_comp.glsl" />
     <None Include="shader\rect_fs.glsl" />
     <None Include="shader\rect_vs.glsl" />
+    <None Include="shader\single_radixsort_comp.glsl" />
     <None Include="shader\sphere_fs.glsl" />
     <None Include="shader\sphere_vs.glsl" />
     <None Include="shader\splat_fs.glsl" />
@@ -173,6 +179,7 @@
     <ClCompile Include="include\imgui\imgui_tables.cpp" />
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\draw\camera.cpp" />
+    <ClCompile Include="src\draw\framebuffer.cpp" />
     <ClCompile Include="src\draw\render_main.cpp" />
     <ClCompile Include="src\draw\shader_c.cpp" />
     <ClCompile Include="src\draw\shader_s.cpp" />
@@ -193,14 +200,17 @@
     <ClCompile Include="src\render_objs\box_obj.cpp" />
     <ClCompile Include="src\render_objs\ellipsoid_obj.cpp" />
     <ClCompile Include="src\render_objs\basic_lighting.cpp" />
+    <ClCompile Include="src\render_objs\gs_framebuffer_obj.cpp" />
     <ClCompile Include="src\render_objs\map_obj.cpp" />
     <ClCompile Include="src\render_objs\rectangle2d_obj.cpp" />
     <ClCompile Include="src\render_objs\sphere_obj.cpp" />
-    <ClCompile Include="src\render_objs\ply_obj.cpp" />
+    <ClCompile Include="src\render_objs\gs_ply_obj.cpp" />
+    <ClCompile Include="src\utils\utils.cpp" />
     <ClCompile Include="thirdparty\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\draw\camera.h" />
+    <ClInclude Include="src\draw\framebuffer.h" />
     <ClInclude Include="src\draw\render_main.h" />
     <ClInclude Include="src\draw\shader_c.h" />
     <ClInclude Include="src\draw\shader_s.h" />
@@ -226,11 +236,12 @@
     <ClInclude Include="src\render_objs\common.h" />
     <ClInclude Include="src\render_objs\ellipsoid_obj.h" />
     <ClInclude Include="src\render_objs\basic_lighting.h" />
+    <ClInclude Include="src\render_objs\gs_framebuffer_obj.h" />
     <ClInclude Include="src\render_objs\map_obj.h" />
     <ClInclude Include="src\render_objs\rectangle2d_obj.h" />
     <ClInclude Include="src\render_objs\render_obj.h" />
     <ClInclude Include="src\render_objs\sphere_obj.h" />
-    <ClInclude Include="src\render_objs\ply_obj.h" />
+    <ClInclude Include="src\render_objs\gs_ply_obj.h" />
     <ClInclude Include="src\threadpool\threadpool.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>

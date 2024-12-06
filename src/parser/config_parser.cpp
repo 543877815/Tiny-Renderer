@@ -134,6 +134,9 @@ void ConfigParser::Parse3DGSConfig(const rapidjson::Value& objConfig)
 	GetJsonString(objConfig, vertexShaderKey, config.vertexShader);
 	GetJsonString(objConfig, fragmentShaderKey, config.fragmentShader);
 	GetJsonString(objConfig, modelPathKey, config.modelPath);
+	GetJsonString(objConfig, fboFragmentShaderKey, config.fboFragmentShader);
+	GetJsonString(objConfig, fboVertexShaderKey, config.fboVertexShader);
+
 	const rapidjson::Value& arr = objConfig[uniformKey];
 	CheckJsonArray(objConfig, uniformKey);
 	for (const auto& elem : arr.GetArray()) {

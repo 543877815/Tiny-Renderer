@@ -25,8 +25,9 @@ GSFrameBufferObj::GSFrameBufferObj(const std::string& vertexShader, const std::s
 
 void GSFrameBufferObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 {
-	SetUpGLStatus();
+	m_fbo->Unbind();
 	UpdateFBO();
+	SetUpGLStatus();
 	m_shader->Use();
 	m_textures->BindTexture(m_textureIdx);
 	m_shader->SetVec4("color", glm::vec4(1.0f));
@@ -36,11 +37,14 @@ void GSFrameBufferObj::DrawObj(const std::unordered_map<std::string, std::any>& 
 
 void GSFrameBufferObj::SetUpGLStatus()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glm::vec4 clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
+}
+
+void GSFrameBufferObj::PrepareDraw()
+{
+	m_fbo->Bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void GSFrameBufferObj::ImGuiCallback()

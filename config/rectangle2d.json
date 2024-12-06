@@ -1,10 +1,10 @@
 [
   {
-    "config_type": "simple",
-    "object_info": {
+    "configType": "simple",
+    "objectInfo": {
       "type": "rectangle2d",
-      "vertex_shader": "./shader/rect_vs.glsl",
-      "fragment_shader": "./shader/rect_fs.glsl",
+      "vertexShader": "./shader/rect_vs.glsl",
+      "fragmentShader": "./shader/rect_fs.glsl",
       "uniform": [ "projection", "view", "model" ],
       "projection": "orthogonal"
     }

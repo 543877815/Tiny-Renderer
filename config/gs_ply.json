@@ -1,21 +1,23 @@
 [
   {
-    "config_type": "simple",
-    "object_info": {
+    "configType": "simple",
+    "objectInfo": {
       "type": "axis",
       "uniform": [ "perspective_projection", "view", "model" ],
-      "vertex_shader": "./shader/axis_vs.glsl",
+      "vertexShader": "./shader/axis_vs.glsl",
       "fragmentShader": "./shader/axis_fs.glsl",
       "projection": "perspective"
     }
   },
   {
-    "config_type": "3dgs",
-    "object_info": {
+    "configType": "3dgs",
+    "objectInfo": {
       "type": "gs_ply",
       "uniform": [ "perspective_projection", "view", "model", "viewport", "camPos", "focal", "tanFov", "nearFar" ],
-      "vertex_shader": "./shader/gs_ply_vs.glsl",
+      "vertexShader": "./shader/gs_ply_vs.glsl",
       "fragmentShader": "./shader/gs_ply_fs.glsl",
+      "fboVertexShader": "./shader/gs_fbo_vs.glsl",
+      "fboFragmentShader": "./shader/gs_fbo_fs.glsl",
       "model_path": "./model/coffee.ply",
       "projection": "perspective"
     }
