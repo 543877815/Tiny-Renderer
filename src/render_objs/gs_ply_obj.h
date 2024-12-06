@@ -127,9 +127,9 @@ public:
 			uint32_t shift = iter * m_bitPerIter;
 
 			// histogram
-			for (auto elem : source)
+			for (const auto& elem : source)
 			{
-				auto& [_, depth] = elem;
+				const auto& [_, depth] = elem;
 				uint32_t bucketId = (depth >> shift) & (m_bucketSize - 1);
 				m_histogram[bucketId].emplace_back(elem);
 			}
@@ -145,9 +145,9 @@ public:
 			}
 
 			// sort
-			for (auto elem : source)
+			for (const auto& elem : source)
 			{
-				auto& [_, depth] = elem;
+				const auto& [_, depth] = elem;
 				uint32_t bucketId = (depth >> shift) & (m_bucketSize - 1);
 				dest[m_presum[bucketId] - 1] = m_histogram[bucketId][m_summation[bucketId] - 1];
 				m_presum[bucketId]--;
@@ -165,7 +165,7 @@ public:
 
 private:
 	const uint32_t m_bit = 32;
-	const uint32_t m_bitPerIter = 8;
+	const uint32_t m_bitPerIter = 8;  // 8 for GPU
 	uint32_t m_bucketSize = 0;
 	uint32_t m_totalIter = 0;
 	std::vector<std::pair<uint32_t, uint32_t>> m_index2depth1{};
@@ -295,7 +295,7 @@ protected:
 
 protected:
 	uint32_t m_vertexCount = 0, m_vertexLength = 0;
-	int m_texture_width = 0, m_textureHeight = 0;
+	int m_textureWidth = 1024 * 2, m_textureHeight = 0;
 	MODEL_TYPE m_type;
 	SORT_METHOD m_sortMethod = COUNTING_SORT;
 	int m_textureIdx = -1;
@@ -303,7 +303,7 @@ protected:
 	std::vector<uint32_t> m_depthIndex{};
 	std::vector<uint32_t> m_textureData{};
 	std::vector<uint32_t> m_indices{};
-	std::unique_ptr<Shader> m_shader = nullptr;
+	std::shared_ptr<Shader> m_shader = nullptr;
 	std::shared_ptr<Texture> m_gaussian_texture = nullptr;
 	std::shared_ptr<VertexArrayObject> m_renderVAO = nullptr;
 	std::shared_ptr<VertexBufferObject> m_rectangleVBO = nullptr;
@@ -320,8 +320,6 @@ public:
 	GSPlyObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
 	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
 	void ImGuiCallback() override;
-	void RunSortUpdateDepth();
-	void SetUpFbo(const char* vertexShader, const char* fragmentShader);
 
 private:
 	struct PlyProperty {
@@ -388,6 +386,8 @@ private:
 	void GenerateTextureData();
 	void GetSigmaFloat32(glm::vec4& rotation, glm::vec3& scale, std::vector<float>& sigmaFloat32);
 	void SetUpAttribute();
+	void RunSortUpdateDepth();
+	void SetUpFbo(const char* vertexShader, const char* fragmentShader);
 
 private:
 	PlyHeader m_header;
@@ -401,9 +401,6 @@ private:
 template<typename T>
 inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 {
-	for (uint32_t i = 0; i < m_indices.size(); i++) {
-		m_indices[i] = i;
-	}
 	std::vector<float> x;
 	std::vector<float> y;
 	std::vector<float> z;
@@ -431,28 +428,38 @@ inline void Base3DGSObj::PresortIndices(std::vector<T>& vertices)
 		});
 }
 
-//class GSSplatObj : public Base3DGSObj {
-//public:
-//public:
-//	GSSplatObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
-//	void SetUpShader(const char* vertexShader, const char* fragmentShader);
-//	void Draw();
-//	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
-//	void ImGuiCallback() override;
-//	void RunSortUpdateDepth();
-//
-//private:
-//	struct SplatVertex {
-//		glm::vec3 position;
-//		glm::vec3 scale;
-//		uint8_t shs[4];  // 0.5 * SH_C0 * v["f_dc"]
-//		uint8_t rotation[4];
-//	};
-//
-//	struct SplatBuffer {
-//		uint8_t data[32];
-//	};
-//};
+class GSSplatObj : public Base3DGSObj {
+public:
+	GSSplatObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr);
+	void DrawObj(const std::unordered_map<std::string, std::any>& uniform);
+	void ImGuiCallback() override;
+
+private:
+	struct SplatVertex {
+		glm::vec3 position;
+		glm::vec3 scale;
+		uint8_t shs[4];  // 0.5 * SH_C0 * v["f_dc"]
+		uint8_t rotation[4];
+	};
+
+	union FloatIntUnion {
+		float f;
+		uint32_t ui;
+	};
+
+	void SetUpAttribute();
+	void GetVertexCount(std::ifstream& file);
+	void GetSigmaHalf2x16(SplatVertex& vertexBuffer, std::vector<uint32_t>& sigmasHalf2x16);
+	void RunSortUpdateDepth();
+	void LoadVertices(std::ifstream& file);
+	uint32_t floatToHalf(float f);
+	uint32_t packHalf2x16(float x, float y);
+
+private:
+	MODEL_TYPE m_type = MODEL_TYPE::SPLAT;
+	std::vector<SplatVertex> m_vertices;
+	std::shared_ptr<BaseSorter<SplatVertex>> m_sorter = nullptr;
+};
 
 
 RENDERABLE_END

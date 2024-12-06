@@ -19,6 +19,7 @@ public:
 private:
 	static inline size_t m_currentIdx = 0;
 	static inline std::vector<std::string> m_configPaths{
+		"./config/gs_splat.json",
 		"./config/gs_ply.json",
 		"./config/box.json",
 		"./config/ellipsoid.json",

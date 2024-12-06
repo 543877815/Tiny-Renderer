@@ -29,6 +29,7 @@ private:
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateRectangle2D(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateMap(std::shared_ptr<Parser::RenderObjConfigBase>);
 	static std::shared_ptr<Renderable::RenderObjectBase> CreateGSPly(std::shared_ptr<Parser::RenderObjConfigBase>);
+	static std::shared_ptr<Renderable::RenderObjectBase> CreateGSSplat(std::shared_ptr<Parser::RenderObjConfigBase>);
 
 	static std::unordered_map<std::string, CreateRenderObjFuncPtr> registerObj;
 };

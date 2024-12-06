@@ -40,14 +40,14 @@
     <Filter Include="thirdparty\glad">
       <UniqueIdentifier>{742d1960-ec17-4e5d-899a-89b0f2818cd2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="thirdparty\imgui">
-      <UniqueIdentifier>{9071b9d4-a153-4f06-8972-94689c66d31f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="draw">
       <UniqueIdentifier>{44ab92bb-c24b-4b59-b7ff-f2ba36f9c86b}</UniqueIdentifier>
     </Filter>
     <Filter Include="manager">
       <UniqueIdentifier>{41516214-feaa-4046-9f82-84949440097e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\imgui">
+      <UniqueIdentifier>{9071b9d4-a153-4f06-8972-94689c66d31f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -123,16 +123,10 @@
     <None Include="shader\gs_ply_vs.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\splat_fs.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\splat_vs.glsl">
-      <Filter>shader</Filter>
-    </None>
     <None Include="config\gs_ply.json">
       <Filter>config</Filter>
     </None>
-    <None Include="config\splat.json">
+    <None Include="config\gs_splat.json">
       <Filter>config</Filter>
     </None>
     <None Include="shader\gs_fbo_fs.glsl">
@@ -151,6 +145,12 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\multi_radixsort_comp.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\gs_splat_vs.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\gs_splat_fs.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

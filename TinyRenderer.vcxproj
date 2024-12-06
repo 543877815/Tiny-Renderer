@@ -142,7 +142,7 @@
     <None Include="config\rectangle2d.json" />
     <None Include="config\sphere.json" />
     <None Include="config\gs_ply.json" />
-    <None Include="config\splat.json" />
+    <None Include="config\gs_splat.json" />
     <None Include="shader\aabb_fs.glsl" />
     <None Include="shader\aabb_vs.glsl" />
     <None Include="shader\axis_fs.glsl" />
@@ -167,8 +167,8 @@
     <None Include="shader\single_radixsort_comp.glsl" />
     <None Include="shader\sphere_fs.glsl" />
     <None Include="shader\sphere_vs.glsl" />
-    <None Include="shader\splat_fs.glsl" />
-    <None Include="shader\splat_vs.glsl" />
+    <None Include="shader\gs_splat_fs.glsl" />
+    <None Include="shader\gs_splat_vs.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\imgui\imgui.cpp" />

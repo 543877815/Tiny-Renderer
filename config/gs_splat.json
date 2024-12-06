@@ -1,0 +1,16 @@
+[
+
+  {
+    "configType": "3dgs",
+    "objectInfo": {
+      "type": "gs_splat",
+      "uniform": [ "perspective_projection", "view", "model", "viewport", "focal", "nearFar" ],
+      "vertexShader": "./shader/gs_splat_vs.glsl",
+      "fragmentShader": "./shader/gs_splat_fs.glsl",
+      "fboVertexShader": "",
+      "fboFragmentShader": "",
+      "model_path": "./model/coffee.splat",
+      "projection": "perspective"
+    }
+  }
+]

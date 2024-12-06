@@ -156,33 +156,33 @@ void GSPlyObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
 void GSPlyObj::ImGuiCallback()
 {
 	ImGui::SliderInt("SphericalHarmonicsDegree", &m_sphericalHarmonicsDegree, 1, 3);
-	static int selected_option = 0;
-	ImGui::Text("Sorting Method");
-	bool isChanged = false;
-	if (ImGui::RadioButton("Countint Sort (CPU)", &selected_option, 0))
 	{
-		m_sorter = std::make_shared<CountingSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		static int selected_option = 0;
+		ImGui::Text("Sorting Method");
+		bool isChanged = false;
+		if (ImGui::RadioButton("Countint Sort (CPU)", &selected_option, 0))
+		{
+			m_sorter = std::make_shared<CountingSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Quick Sort (CPU)", &selected_option, 1))
+		{
+			m_sorter = std::make_shared<QuickSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Radix Sort (CPU)", &selected_option, 2))
+		{
+			m_sorter = std::make_shared<RadixSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		}
+		m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	}
-	ImGui::SameLine();
-	if (ImGui::RadioButton("Quick Sort (CPU)", &selected_option, 1))
-	{
-		m_sorter = std::make_shared<QuickSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
-	}
-	ImGui::SameLine();
-	if (ImGui::RadioButton("Radix Sort (CPU)", &selected_option, 2))
-	{
-		m_sorter = std::make_shared<RadixSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
-	}
-	m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	Base3DGSObj::ImGuiCallback();
-
 	m_fbo->ImGuiCallback();
 }
 
 void GSPlyObj::RunSortUpdateDepth()
 {
 	m_sorter->Sort(m_vertices, m_indices, m_depthIndex);
-
 	m_depthIndexVBO->Update(m_depthIndex);
 }
 
@@ -366,6 +366,9 @@ void GSPlyObj::GetSigmaFloat32(glm::vec4& rotation, glm::vec3& scale, std::vecto
 void GSPlyObj::SetUpAttribute()
 {
 	m_vertexCount = m_header.verticeNum;
+	m_vertexLength = 64;
+	m_textureHeight = std::ceil((2.0f * m_vertexCount) / m_textureWidth) * 8;
+	m_textureData.resize(m_textureWidth * m_textureHeight * 4);
 	m_vertices.resize(m_vertexCount);
 	m_sorter = std::make_shared<CountingSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
 	Base3DGSObj::SetUpAttribute();
@@ -378,7 +381,7 @@ void GSPlyObj::SetUpFbo(const char* vertexShader, const char* fragmentShader)
 
 void Base3DGSObj::SetUpShader(const char* vertexShader, const char* fragmentShader)
 {
-	m_shader = std::make_unique<Shader>(vertexShader, fragmentShader);
+	m_shader = std::make_shared<Shader>(vertexShader, fragmentShader);
 }
 
 void Base3DGSObj::GenerateTexture()
@@ -388,14 +391,13 @@ void Base3DGSObj::GenerateTexture()
 	m_texture_parameters.magFilter = FilterType::Nearest;
 	m_texture_parameters.sWrap = WrapType::ClampToEdge;
 	m_texture_parameters.tWrap = WrapType::ClampToEdge;
-	m_textureIdx = m_gaussian_texture->GenerateTexture(m_texture_width, m_textureHeight,
+	m_textureIdx = m_gaussian_texture->GenerateTexture(m_textureWidth, m_textureHeight,
 		GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT, m_texture_parameters, m_textureData.data());
 }
 
 void Base3DGSObj::SetUpData()
 {
 	m_renderVAO = std::make_shared<VertexArrayObject>();
-
 	float position_scale = 1.0f;
 	std::vector<glm::vec2> vertices{
 			glm::vec2(-position_scale, -position_scale),
@@ -429,13 +431,13 @@ void Base3DGSObj::SetUpGLStatus()
 
 void Base3DGSObj::SetUpAttribute()
 {
-	m_vertexLength = 64;
-	m_texture_width = 1024 * 2;
-	m_textureHeight = std::ceil((2.0f * m_vertexCount) / m_texture_width) * 8;
-	m_textureData.resize(m_texture_width * m_textureHeight * 4);
 	m_gaussian_texture = std::make_shared<Texture>(1);
 	m_depthIndex.resize(m_vertexCount);
 	m_indices.resize(m_vertexCount);
+	for (uint32_t i = 0; i < m_indices.size(); i++) {
+		m_indices[i] = i;
+	}
+	m_textureData.resize(m_textureWidth * m_textureHeight * 4);
 }
 
 void Base3DGSObj::ImGuiCallback()
@@ -452,5 +454,167 @@ void Base3DGSObj::ImGuiCallback()
 	}
 }
 
+GSSplatObj::GSSplatObj(std::shared_ptr<Parser::RenderObjConfigBase> baseConfigPtr)
+{
+	auto configPtr = std::static_pointer_cast<Parser::RenderObjConfig3DGS>(baseConfigPtr);
+	SetUpShader(configPtr->vertexShader.c_str(), configPtr->fragmentShader.c_str());
+	std::ifstream file(configPtr->modelPath, std::ios::binary);
+	GetVertexCount(file);
+	SetUpAttribute();
+	LoadVertices(file);
+	GenerateTexture();
+	SetUpData();
+}
+
+
+void GSSplatObj::LoadVertices(std::ifstream& file)
+{
+	file.seekg(0, std::ios::beg);
+	m_vertices.resize(m_vertexCount);
+	for (size_t i = 0; i < m_vertexCount; i++) {
+		assert(file.is_open(), "");
+		file.read(reinterpret_cast<char*>(&m_vertices[i]), sizeof(SplatVertex));
+		std::vector<uint32_t> sigmasHalf2x16;
+		GetSigmaHalf2x16(m_vertices[i], sigmasHalf2x16);
+		// 0: posx, 1: posy, 2: posz, 3: 0, 4: cov12, 5: cov34, 6: cov56, 7: RGBA(lp)
+		std::copy_n(reinterpret_cast<float*>(&m_vertices[i].position), 3, reinterpret_cast<float*>(&m_textureData[m_vertexLength * i]));
+		std::copy_n(reinterpret_cast<uint32_t*>(sigmasHalf2x16.data()), 3, reinterpret_cast<uint32_t*>(&m_textureData[m_vertexLength * i + 4]));
+		std::copy_n(reinterpret_cast<uint8_t*>(&m_vertices[i].shs), 4, reinterpret_cast<uint8_t*>(&m_textureData[m_vertexLength * i + 7]));
+	}
+}
+
+
+void GSSplatObj::DrawObj(const std::unordered_map<std::string, std::any>& uniform)
+{
+	glm::mat4 projection = std::any_cast<glm::mat4>(uniform.at("perspective_projection"));
+	glm::mat4 view = std::any_cast<glm::mat4>(uniform.at("view"));
+	glm::mat4 model = std::any_cast<glm::mat4>(uniform.at("model"));
+	glm::vec2 focal = std::any_cast<glm::vec2>(uniform.at("focal"));
+	glm::vec2 viewport = std::any_cast<glm::vec2>(uniform.at("viewport"));
+	glm::vec2 nearFar = std::any_cast<glm::vec2>(uniform.at("nearFar"));
+	SetUpGLStatus();
+	RunSortUpdateDepth();
+	m_shader->Use();
+	m_renderVAO->Bind();
+	m_gaussian_texture->BindTexture(m_textureIdx);
+	m_shader->SetMat4("projection", projection);
+	m_shader->SetMat4("view", view);
+	m_shader->SetMat4("model", model);
+	m_shader->SetVec2("focal", focal);
+	m_shader->SetVec2("viewport", viewport);
+	m_shader->SetVec2("nearFar", nearFar);
+	m_shader->SetInt("u_texture", m_textureIdx);
+	Draw();
+	m_renderVAO->Unbind();
+}
+
+void GSSplatObj::ImGuiCallback()
+{
+	{
+		static int selected_option = 0;
+		ImGui::Text("Sorting Method");
+		bool isChanged = false;
+		if (ImGui::RadioButton("Countint Sort (CPU)", &selected_option, 0))
+		{
+			m_sorter = std::make_shared<CountingSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Quick Sort (CPU)", &selected_option, 1))
+		{
+			m_sorter = std::make_shared<QuickSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Radix Sort (CPU)", &selected_option, 2))
+		{
+			m_sorter = std::make_shared<RadixSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+		}
+		m_sortMethod = static_cast<SORT_METHOD>(selected_option);
+	}
+}
+
+void GSSplatObj::RunSortUpdateDepth()
+{
+	m_sorter->Sort(m_vertices, m_indices, m_depthIndex);
+	m_depthIndexVBO->Update(m_depthIndex);
+}
+
+void GSSplatObj::GetSigmaHalf2x16(SplatVertex& vertexBuffer, std::vector<uint32_t>& sigmasHalf2x16)
+{
+	std::vector<double> rot{
+		(static_cast<double>(vertexBuffer.rotation[0]) - 128.0) / 128.0,
+		(static_cast<double>(vertexBuffer.rotation[1]) - 128.0) / 128.0,
+		(static_cast<double>(vertexBuffer.rotation[2]) - 128.0) / 128.0,
+		(static_cast<double>(vertexBuffer.rotation[3]) - 128.0) / 128.0,
+	};
+
+	std::vector<double> scale{
+		static_cast<double>(vertexBuffer.scale.x),
+		static_cast<double>(vertexBuffer.scale.y),
+		static_cast<double>(vertexBuffer.scale.z),
+	};
+
+	std::vector<double> sigma(6);
+	GetSigma(scale, rot, sigma);
+
+	for (size_t i = 0; i < 3; i++) {
+		sigmasHalf2x16.emplace_back(packHalf2x16(sigma[i * 2], sigma[i * 2 + 1]));
+	}
+}
+
+
+uint32_t GSSplatObj::floatToHalf(float f)
+{
+	FloatIntUnion fiu;
+	fiu.f = f;
+	uint32_t i = fiu.ui;
+	uint32_t sign = (i >> 31) & 0x0001;
+	uint32_t exp = (i >> 23) & 0x00ff;
+	uint32_t frac = i & 0x007fffff;
+
+	int newExp;
+	if (exp == 0) {
+		newExp = 0;
+	}
+	else if (exp < 113) {
+		newExp = 0;
+		frac |= 0x00800000;
+		frac = frac >> (113 - exp);
+		if (frac & 0x01000000) {
+			newExp = 1;
+			frac = 0;
+		}
+	}
+	else if (exp < 142) {
+		newExp = exp - 112;
+	}
+	else {
+		newExp = 31;
+		frac = 0;
+	}
+	return (sign << 15) | (newExp << 10) | (frac >> 13);
+}
+
+uint32_t GSSplatObj::packHalf2x16(float x, float y)
+{
+	return (floatToHalf(x) | (floatToHalf(y) << 16));
+}
+
+void GSSplatObj::SetUpAttribute()
+{
+	m_vertexLength = 8;
+	m_textureHeight = std::ceil((2.0f * m_vertexCount) / m_textureWidth);
+	m_vertices.resize(m_vertexCount);
+	m_sorter = std::make_shared<CountingSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+	Base3DGSObj::SetUpAttribute();
+}
+
+void GSSplatObj::GetVertexCount(std::ifstream& file)
+{
+	file.seekg(0, std::ios::end);
+	std::streamsize size = file.tellg();
+	size_t rowLength = 3 * 4 + 3 * 4 + 4 + 4;
+	m_vertexCount = size / rowLength;
+}
 RENDERABLE_END
+
 
