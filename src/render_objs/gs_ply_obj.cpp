@@ -182,8 +182,7 @@ void GSPlyObj::ImGuiCallback()
 
 void GSPlyObj::RunSortUpdateDepth()
 {
-	m_sorter->Sort(m_vertices, m_indices, m_depthIndex);
-	m_depthIndexVBO->Update(m_depthIndex);
+	m_sorter->Sort(m_vertices, m_indices, m_depthIndex, m_depthIndexVBO);
 }
 
 void GSPlyObj::LoadModelHeader(std::ifstream& file, PlyHeader& header)
@@ -528,14 +527,17 @@ void GSSplatObj::ImGuiCallback()
 		{
 			m_sorter = std::make_shared<RadixSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
 		}
+		if (ImGui::RadioButton("Single Radix Sort (GPU)", &selected_option, 3))
+		{
+			m_sorter = std::make_shared<SingleRadixSortGPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+		}
 		m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	}
 }
 
 void GSSplatObj::RunSortUpdateDepth()
 {
-	m_sorter->Sort(m_vertices, m_indices, m_depthIndex);
-	m_depthIndexVBO->Update(m_depthIndex);
+	m_sorter->Sort(m_vertices, m_indices, m_depthIndex, m_depthIndexVBO);
 }
 
 void GSSplatObj::GetSigmaHalf2x16(SplatVertex& vertexBuffer, std::vector<uint32_t>& sigmasHalf2x16)

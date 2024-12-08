@@ -29,7 +29,6 @@ RenderMain::RenderMain()
 	m_renderObjMgr = RenderObjectManager::GetInstance();
 	m_imguiMgr = ImGuiManager::GetInstance(m_window);
 	m_uniformSetter = std::make_unique<Registry::UniformSetter>();
-	//m_fbo = std::make_shared<Renderable::GSFrameBufferObj>("./shader/gs_fbo_vs.glsl", "./shader/gs_fbo_fs.glsl"); // to be packed
 }
 
 void RenderMain::SetupRenderObjs(std::vector<std::string>& configPaths)

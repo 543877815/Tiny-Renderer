@@ -18,6 +18,7 @@ public:
 	// ------------------------------------------------------------------------
 	void SetBool(const std::string& name, bool value) const;
 	void SetInt(const std::string& name, int value) const;
+	void SetUInt(const std::string& name, uint32_t value) const;
 	void SetFloat(const std::string& name, float value) const;
 	void SetVec2(const std::string& name, const glm::vec2& value) const;
 	void SetVec2(const std::string& name, float x, float y) const;

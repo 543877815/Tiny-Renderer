@@ -23,7 +23,6 @@ std::vector<std::string> RegisterConfigPath::GetConfigPath(Operator op)
 	{
 		m_currentIdx = (m_currentIdx - 1 + size) % size;
 	}
-	std::cout << m_currentIdx << std::endl;
 	return { m_configPaths[m_currentIdx] };
 }
 

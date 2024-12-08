@@ -16,7 +16,10 @@ VertexBufferObject::VertexBufferObject(int targetIn, const std::vector<float>& d
 	target = targetIn;
 	glGenBuffers(1, &obj);
 	Bind();
-	glBufferData(target, sizeof(float) * data.size(), (void*)data.data(), flags);
+	if (targetIn == GL_ARRAY_BUFFER)
+		glBufferData(target, sizeof(float) * data.size(), (void*)data.data(), flags);
+	else
+		glBufferStorage(target, sizeof(float) * data.size(), (void*)data.data(), flags);
 	Unbind();
 	elementSize = 1;
 	type = GL_FLOAT;
@@ -28,7 +31,10 @@ VertexBufferObject::VertexBufferObject(int targetIn, const std::vector<glm::vec2
 	target = targetIn;
 	glGenBuffers(1, &obj);
 	Bind();
-	glBufferData(target, sizeof(glm::vec2) * data.size(), (void*)data.data(), flags);
+	if (targetIn == GL_ARRAY_BUFFER)
+		glBufferData(target, sizeof(glm::vec2) * data.size(), (void*)data.data(), flags);
+	else
+		glBufferStorage(target, sizeof(glm::vec2) * data.size(), (void*)data.data(), flags);
 	Unbind();
 	elementSize = 2;
 	type = GL_FLOAT;
@@ -40,7 +46,10 @@ VertexBufferObject::VertexBufferObject(int targetIn, const std::vector<glm::vec3
 	target = targetIn;
 	glGenBuffers(1, &obj);
 	Bind();
-	glBufferData(target, sizeof(glm::vec3) * data.size(), (void*)data.data(), flags);
+	if (targetIn == GL_ARRAY_BUFFER)
+		glBufferData(target, sizeof(glm::vec3) * data.size(), (void*)data.data(), flags);
+	else
+		glBufferStorage(target, sizeof(glm::vec3) * data.size(), (void*)data.data(), flags);
 	Unbind();
 	elementSize = 3;
 	type = GL_FLOAT;
@@ -52,7 +61,10 @@ VertexBufferObject::VertexBufferObject(int targetIn, const std::vector<glm::vec4
 	target = targetIn;
 	glGenBuffers(1, &obj);
 	Bind();
-	glBufferData(target, sizeof(glm::vec4) * data.size(), (void*)data.data(), flags);
+	if (targetIn == GL_ARRAY_BUFFER)
+		glBufferData(target, sizeof(glm::vec4) * data.size(), (void*)data.data(), flags);
+	else
+		glBufferStorage(target, sizeof(glm::vec4) * data.size(), (void*)data.data(), flags);
 	Unbind();
 	elementSize = 4;
 	type = GL_FLOAT;
@@ -64,7 +76,10 @@ VertexBufferObject::VertexBufferObject(int targetIn, const std::vector<uint32_t>
 	target = targetIn;
 	glGenBuffers(1, &obj);
 	Bind();
-	glBufferData(target, sizeof(uint32_t) * data.size(), (void*)data.data(), flags);
+	if (targetIn == GL_ARRAY_BUFFER)
+		glBufferData(target, sizeof(uint32_t) * data.size(), (void*)data.data(), flags);
+	else
+		glBufferStorage(target, sizeof(uint32_t) * data.size(), (void*)data.data(), flags);
 	Unbind();
 	elementSize = 1;
 	type = GL_INT;
