@@ -174,6 +174,14 @@ void GSPlyObj::ImGuiCallback()
 		{
 			m_sorter = std::make_shared<RadixSortCPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
 		}
+		if (ImGui::RadioButton("Single Pass Radix Sort (GPU)", &selected_option, 3))
+		{
+			m_sorter = std::make_shared<SinglePassRadixSortGPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		}
+		if (ImGui::RadioButton("Multiple Pass Radix Sort (GPU)", &selected_option, 4))
+		{
+			m_sorter = std::make_shared<MultiPassRadixSortGPU<PlyVertex3>>(m_vertexCount, m_sortOrder);
+		}
 		m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	}
 	Base3DGSObj::ImGuiCallback();
@@ -527,9 +535,13 @@ void GSSplatObj::ImGuiCallback()
 		{
 			m_sorter = std::make_shared<RadixSortCPU<SplatVertex>>(m_vertexCount, m_sortOrder);
 		}
-		if (ImGui::RadioButton("Single Radix Sort (GPU)", &selected_option, 3))
+		if (ImGui::RadioButton("Single Pass Radix Sort (GPU)", &selected_option, 3))
 		{
-			m_sorter = std::make_shared<SingleRadixSortGPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+			m_sorter = std::make_shared<SinglePassRadixSortGPU<SplatVertex>>(m_vertexCount, m_sortOrder);
+		}
+		if (ImGui::RadioButton("Multiple Pass Radix Sort (GPU)", &selected_option, 4))
+		{
+			m_sorter = std::make_shared<MultiPassRadixSortGPU<SplatVertex>>(m_vertexCount, m_sortOrder);
 		}
 		m_sortMethod = static_cast<SORT_METHOD>(selected_option);
 	}

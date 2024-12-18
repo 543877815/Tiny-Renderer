@@ -39,42 +39,28 @@ protected:
 };
 
 template <typename T>
-class SingleRadixSortGPU : public BaseSorter<T>
+class SinglePassRadixSortGPU : public BaseSorter<T>
 {
 public:
-	SingleRadixSortGPU(uint32_t vertexCount, SORT_ORDER sortOrder)
+	SinglePassRadixSortGPU(uint32_t vertexCount, SORT_ORDER sortOrder)
 	{
 		this->m_vertexCount = vertexCount;
 		this->m_sortOrder = sortOrder;
 		m_preSortProg = std::make_shared<ComputeShader>("./shader/presort_comp.glsl");
-		m_singleRadixSortProg = std::make_shared<ComputeShader>("./shader/single_radixsort_comp.glsl");
+		m_sortProg = std::make_shared<ComputeShader>("./shader/single_radixsort_comp.glsl");
 	}
 	void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex, std::shared_ptr<VertexBufferObject> vbo)
 	{
 		if (m_depthVec.empty())
 		{
-			m_posVec.resize(this->m_vertexCount);
-			m_indexVec.resize(this->m_vertexCount);
-			m_depthVec.resize(this->m_vertexCount);
-			m_atomicCounterVec.resize(1);
-			for (size_t i = 0; i < this->m_vertexCount; i++)
-			{
-				m_posVec[i] = glm::vec4(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.0f);
-				m_depthVec[i] = i;
-			}
-			m_keyBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
-			m_key2Buffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
-			m_valBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
-			m_val2Buffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
-			m_posBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_posVec, GL_DYNAMIC_STORAGE_BIT);
-			m_atomicCounterBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_atomicCounterVec, GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT);
+			InitBuffer(vertices, indices);
 		}
 
-		{
+		{ // presort
 			const uint32_t MAX_DEPTH = UINT32_MAX;
 			auto instance = Camera::GetInstance();
 			glm::vec2 nearFar = glm::vec2(instance->GetNear(), instance->GetFar());
-			auto modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+			glm::mat4 modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
 
 			m_preSortProg->Use();
 			m_preSortProg->SetMat4("modelViewProj", modelViewProjMatrix);
@@ -100,38 +86,218 @@ public:
 			assert(m_atomicCounterVec[0] <= this->m_vertexCount);
 		}
 
-		{
-			m_singleRadixSortProg->Use();
-			m_singleRadixSortProg->SetUInt("g_num_elements", m_atomicCounterVec[0]);
+		{  // singleSort
+			m_sortProg->Use();
+			m_sortProg->SetUInt("g_num_elements", m_atomicCounterVec[0]);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_keyBuffer->GetObj());
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_key2Buffer->GetObj());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_keyBuffer2->GetObj());
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_valBuffer->GetObj());
-			glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 3, m_val2Buffer->GetObj());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_valBuffer2->GetObj());
+
 			glDispatchCompute(1, 1, 1);
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		}
+
+		{
+			glBindBuffer(GL_COPY_READ_BUFFER, m_valBuffer2->GetObj());
+			glBindBuffer(GL_COPY_WRITE_BUFFER, vbo->GetObj());
+			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->m_vertexCount * sizeof(uint32_t));
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		}
+	}
+
+private:
+	void InitBuffer(const std::vector<T>& vertices, const std::vector<uint32_t>& indices)
+	{
+		m_posVec.resize(this->m_vertexCount);
+		m_indexVec.resize(this->m_vertexCount);
+		m_depthVec.resize(this->m_vertexCount);
+		m_atomicCounterVec.resize(1);
+		for (size_t i = 0; i < this->m_vertexCount; i++)
+		{
+			size_t idx = indices[i];
+			m_posVec[i] = glm::vec4(vertices[idx].position.x, vertices[idx].position.y, vertices[idx].position.z, 1.0f);
+			m_indexVec[i] = i;
+		}
+		m_keyBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
+		m_keyBuffer2 = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
+		m_valBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
+		m_valBuffer2 = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
+		m_posBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_posVec);
+		m_atomicCounterBuffer = std::make_shared<VertexBufferObject>(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterVec, GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT);
+	}
+
+	std::shared_ptr<ComputeShader> m_preSortProg = nullptr;
+	std::shared_ptr<ComputeShader> m_sortProg = nullptr;
+	std::shared_ptr<VertexBufferObject> m_keyBuffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_keyBuffer2 = nullptr;
+	std::shared_ptr<VertexBufferObject> m_valBuffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_valBuffer2 = nullptr;
+	std::shared_ptr<VertexBufferObject> m_posBuffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_atomicCounterBuffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_histogramBuffer = nullptr;
+	std::vector<glm::vec4> m_posVec = {};
+	std::vector<uint32_t> m_indexVec = {};
+	std::vector<uint32_t> m_depthVec = {};
+	std::vector<uint32_t> m_atomicCounterVec = {};
+};
+
+
+template <typename T>
+class MultiPassRadixSortGPU : public BaseSorter<T>
+{
+public:
+	MultiPassRadixSortGPU(uint32_t vertexCount, SORT_ORDER sortOrder)
+	{
+		this->m_vertexCount = vertexCount;
+		this->m_sortOrder = sortOrder;
+		m_preSortProg = std::make_shared<ComputeShader>("./shader/presort_comp.glsl");
+		m_sortProg = std::make_shared<ComputeShader>("./shader/multi_radixsort_comp.glsl");
+		m_histogramProg = std::make_shared<ComputeShader>("shader/multi_radixsort_histograms_comp.glsl");
+	}
+	void Sort(const std::vector<T>& vertices, const std::vector<uint32_t>& indices, std::vector<uint32_t>& depthIndex, std::shared_ptr<VertexBufferObject> vbo)
+	{
+		if (m_depthVec.empty())
+		{
+			InitBuffer(vertices, indices);
+		}
+
+		{ // presort
+			const uint32_t MAX_DEPTH = UINT32_MAX;
+			auto instance = Camera::GetInstance();
+			glm::vec2 nearFar = glm::vec2(instance->GetNear(), instance->GetFar());
+			glm::mat4 modelViewProjMatrix = instance->GetProjMat() * instance->GetViewMat();
+
+			m_preSortProg->Use();
+			m_preSortProg->SetMat4("modelViewProj", modelViewProjMatrix);
+			m_preSortProg->SetVec2("nearFar", nearFar);
+			m_preSortProg->SetUInt("keyMax", MAX_DEPTH);
+
+			// reset counter back to zero
+			m_atomicCounterVec[0] = 0;
+			m_atomicCounterBuffer->Update(m_atomicCounterVec);
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_posBuffer->GetObj());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_keyBuffer->GetObj());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_valBuffer->GetObj());
+			glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 4, m_atomicCounterBuffer->GetObj());
+
+			const uint32_t LOCAL_SIZE = 256;
+			glDispatchCompute(static_cast<uint32_t>((this->m_vertexCount + LOCAL_SIZE - 1) / LOCAL_SIZE), 1, 1);
 			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT);
+		}
+
+		{
+			m_atomicCounterBuffer->Read(m_atomicCounterVec);
+			assert(m_atomicCounterVec[0] <= this->m_vertexCount);
+		}
+
+		{  // multi-pass sort
+			const uint32_t NUM_ELEMENTS = static_cast<uint32_t>(m_atomicCounterVec[0]);
+			const uint32_t NUM_WORKGROUPS = (NUM_ELEMENTS + m_numBlocksPerWorkgroup - 1) / m_numBlocksPerWorkgroup;
+			const uint32_t NUM_BYTES = 4;
+			m_sortProg->Use();
+			m_sortProg->SetUInt("g_num_elements", NUM_ELEMENTS);
+			m_sortProg->SetUInt("g_num_workgroups", NUM_WORKGROUPS);
+			m_sortProg->SetUInt("g_num_blocks_per_workgroup", m_numBlocksPerWorkgroup);
+
+			m_histogramProg->Use();
+			m_histogramProg->SetUInt("g_num_elements", NUM_ELEMENTS);
+			m_histogramProg->SetUInt("g_num_blocks_per_workgroup", m_numBlocksPerWorkgroup);
+
+			for (uint32_t i = 0; i < NUM_BYTES; i++)
+			{
+				m_histogramProg->Use();
+				m_histogramProg->SetUInt("g_shift", 8 * i);
+
+				if (i == 0 || i == 2)
+				{
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_keyBuffer->GetObj());
+				}
+				else
+				{
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_keyBuffer2->GetObj());
+				}
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_histogramBuffer->GetObj());
+
+				glDispatchCompute(NUM_WORKGROUPS, 1, 1);
+
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+				m_sortProg->Use();
+				m_sortProg->SetUInt("g_shift", 8 * i);
+
+				if ((i % 2) == 0)  // even
+				{
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_keyBuffer->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_keyBuffer2->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_valBuffer->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_valBuffer2->GetObj());
+				}
+				else  // odd
+				{
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_keyBuffer2->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_keyBuffer->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_valBuffer2->GetObj());
+					glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_valBuffer->GetObj());
+				}
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_histogramBuffer->GetObj());
+
+				glDispatchCompute(NUM_WORKGROUPS, 1, 1);
+
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+			}
 		}
 
 		{
 			glBindBuffer(GL_COPY_READ_BUFFER, m_valBuffer->GetObj());
 			glBindBuffer(GL_COPY_WRITE_BUFFER, vbo->GetObj());
 			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->m_vertexCount * sizeof(uint32_t));
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 	}
-
 private:
+	void InitBuffer(const std::vector<T>& vertices, const std::vector<uint32_t>& indices)
+	{
+		m_posVec.resize(this->m_vertexCount);
+		m_indexVec.resize(this->m_vertexCount);
+		m_depthVec.resize(this->m_vertexCount);
+		m_atomicCounterVec.resize(1);
+		const uint32_t NUM_WORKGROUPS = (this->m_vertexCount + m_numBlocksPerWorkgroup - 1) / m_numBlocksPerWorkgroup;
+		const uint32_t RADIX_SORT_BINS = 256;
+		m_histogramVec.resize(NUM_WORKGROUPS * RADIX_SORT_BINS);
+		m_histogramBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_histogramVec, GL_DYNAMIC_STORAGE_BIT);
+		for (size_t i = 0; i < this->m_vertexCount; i++)
+		{
+			size_t idx = indices[i];
+			m_posVec[i] = glm::vec4(vertices[idx].position.x, vertices[idx].position.y, vertices[idx].position.z, 1.0f);
+			m_indexVec[i] = i;
+		}
+		m_keyBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
+		m_keyBuffer2 = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_depthVec, GL_DYNAMIC_STORAGE_BIT);
+		m_valBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
+		m_valBuffer2 = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_indexVec, GL_DYNAMIC_STORAGE_BIT);
+		m_posBuffer = std::make_shared<VertexBufferObject>(GL_SHADER_STORAGE_BUFFER, m_posVec);
+		m_atomicCounterBuffer = std::make_shared<VertexBufferObject>(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterVec, GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT);
+	}
 	std::shared_ptr<ComputeShader> m_preSortProg = nullptr;
-	std::shared_ptr<ComputeShader> m_singleRadixSortProg = nullptr;
+	std::shared_ptr<ComputeShader> m_sortProg = nullptr;
+	std::shared_ptr<ComputeShader> m_histogramProg = nullptr;
 	std::shared_ptr<VertexBufferObject> m_keyBuffer = nullptr;
-	std::shared_ptr<VertexBufferObject> m_key2Buffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_keyBuffer2 = nullptr;
 	std::shared_ptr<VertexBufferObject> m_valBuffer = nullptr;
-	std::shared_ptr<VertexBufferObject> m_val2Buffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_valBuffer2 = nullptr;
 	std::shared_ptr<VertexBufferObject> m_posBuffer = nullptr;
 	std::shared_ptr<VertexBufferObject> m_atomicCounterBuffer = nullptr;
+	std::shared_ptr<VertexBufferObject> m_histogramBuffer = nullptr;
 	std::vector<glm::vec4> m_posVec = {};
 	std::vector<uint32_t> m_indexVec = {};
 	std::vector<uint32_t> m_depthVec = {};
 	std::vector<uint32_t> m_atomicCounterVec = {};
+	std::vector<uint32_t> m_histogramVec = {};
+	uint32_t m_numBlocksPerWorkgroup = 1024;
 };
+
 
 template <typename T>
 class QuickSortCPU : public BaseSorter<T>
